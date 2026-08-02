@@ -9,7 +9,7 @@ import {
 
 export interface TestCaseResult {
   id: string;
-  group: "Group A" | "Group B";
+  group: "Group A" | "Group B" | "Group C";
   title: string;
   description: string;
   setupState: string;
@@ -229,7 +229,14 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       }
     ]);
 
-    // Test A4.1: Exactly at start_date
+    // Each boundary is emitted as its own result row so a row's status/decision
+    // columns are never self-contradictory. (Previously a single "A4" row reported
+    // only the end+1s status of 403 while its own text claimed the end boundary was
+    // ALLOWED(200) -- an internal reporting contradiction, not a gating-logic bug.
+    // The gate uses inclusive bounds: `now >= start && now <= end`.)
+
+    // A4.1: Exactly at start_date (inclusive lower bound -> inside window)
+    const msgBeforeStart = MESSAGES_DB.length;
     const resStart = evaluateComplianceGate({
       coach_id: "cch_fbs_freeman",
       recruit_id: "rec_jr_hunter",
@@ -237,8 +244,27 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       override_timestamp: "2026-08-01T00:00:00.000Z",
       writeAuditLog: true
     });
+    const startAudit = MESSAGE_SEND_ATTEMPTS_DB[0] || null;
+    const startMsgCreated = MESSAGES_DB.length > msgBeforeStart;
 
-    // Test A4.2: Exactly at end_date
+    results.push({
+      id: "A4.1",
+      group: "Group A",
+      title: "Boundary: Exactly at start_date (inclusive)",
+      description: "now === start_date must fall inside the window (comparison uses now >= start).",
+      setupState: "Period 2026-08-01T00:00:00Z .. 2026-08-31T23:59:59Z. Request at exact start.",
+      requestPayload: { at: "2026-08-01T00:00:00.000Z" },
+      expectedOutcome: "ALLOWED (200); allowed audit row + message row created.",
+      actualStatus: resStart.httpStatus,
+      actualDecision: resStart.decision,
+      auditRowCreated: startAudit,
+      messageRowCreated: startMsgCreated,
+      verdict: (resStart.httpStatus === 200 && resStart.decision === "allowed" && startMsgCreated) ? "PASS" : "FAIL",
+      details: `Start boundary: decision=${resStart.decision.toUpperCase()} status=${resStart.httpStatus}`
+    });
+
+    // A4.2: Exactly at end_date (inclusive upper bound -> inside window)
+    const msgBeforeEnd = MESSAGES_DB.length;
     const resEnd = evaluateComplianceGate({
       coach_id: "cch_fbs_freeman",
       recruit_id: "rec_jr_hunter",
@@ -246,8 +272,27 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       override_timestamp: "2026-08-31T23:59:59.000Z",
       writeAuditLog: true
     });
+    const endAudit = MESSAGE_SEND_ATTEMPTS_DB[0] || null;
+    const endMsgCreated = MESSAGES_DB.length > msgBeforeEnd;
 
-    // Test A4.3: Exactly 1 second after end_date
+    results.push({
+      id: "A4.2",
+      group: "Group A",
+      title: "Boundary: Exactly at end_date (inclusive)",
+      description: "now === end_date must fall inside the window (comparison uses now <= end).",
+      setupState: "Period 2026-08-01T00:00:00Z .. 2026-08-31T23:59:59Z. Request at exact end.",
+      requestPayload: { at: "2026-08-31T23:59:59.000Z" },
+      expectedOutcome: "ALLOWED (200); allowed audit row + message row created.",
+      actualStatus: resEnd.httpStatus,
+      actualDecision: resEnd.decision,
+      auditRowCreated: endAudit,
+      messageRowCreated: endMsgCreated,
+      verdict: (resEnd.httpStatus === 200 && resEnd.decision === "allowed" && endMsgCreated) ? "PASS" : "FAIL",
+      details: `End boundary: decision=${resEnd.decision.toUpperCase()} status=${resEnd.httpStatus}`
+    });
+
+    // A4.3: Exactly 1 second after end_date (exclusive past boundary -> fail-closed)
+    const msgBeforeAfter = MESSAGES_DB.length;
     const resAfter = evaluateComplianceGate({
       coach_id: "cch_fbs_freeman",
       recruit_id: "rec_jr_hunter",
@@ -255,32 +300,23 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       override_timestamp: "2026-09-01T00:00:00.000Z",
       writeAuditLog: true
     });
-
-    const pass =
-      resStart.decision === "allowed" &&
-      resEnd.decision === "allowed" &&
-      resAfter.decision === "error"; // Fail-closed past boundary
-
-    const auditRow = MESSAGE_SEND_ATTEMPTS_DB[0] || null;
+    const afterAudit = MESSAGE_SEND_ATTEMPTS_DB[0] || null;
+    const afterMsgCreated = MESSAGES_DB.length > msgBeforeAfter;
 
     results.push({
-      id: "A4",
+      id: "A4.3",
       group: "Group A",
-      title: "Boundary Timestamps (Start, End, End+1s)",
-      description: "Test exact inclusive start_date, inclusive end_date, and exclusive end_date + 1s.",
-      setupState: "Period defined from 2026-08-01T00:00:00Z to 2026-08-31T23:59:59Z.",
-      requestPayload: {
-        at_start: "2026-08-01T00:00:00.000Z",
-        at_end: "2026-08-31T23:59:59.000Z",
-        at_end_plus_1s: "2026-09-01T00:00:00.000Z"
-      },
-      expectedOutcome: "Start boundary = ALLOWED (200), End boundary = ALLOWED (200), End + 1s = ERROR/BLOCKED (403).",
+      title: "Boundary: 1 second after end_date (exclusive, fail-closed)",
+      description: "now === end_date + 1s must fall outside the window and fail closed.",
+      setupState: "Period 2026-08-01T00:00:00Z .. 2026-08-31T23:59:59Z. Request at end+1s.",
+      requestPayload: { at: "2026-09-01T00:00:00.000Z" },
+      expectedOutcome: "ERROR/BLOCKED (403); error audit row, no message created.",
       actualStatus: resAfter.httpStatus,
       actualDecision: resAfter.decision,
-      auditRowCreated: auditRow,
-      messageRowCreated: false,
-      verdict: pass ? "PASS" : "FAIL",
-      details: `Start boundary: ${resStart.decision.toUpperCase()} | End boundary: ${resEnd.decision.toUpperCase()} | End + 1s boundary: ${resAfter.decision.toUpperCase()}`
+      auditRowCreated: afterAudit,
+      messageRowCreated: afterMsgCreated,
+      verdict: (resAfter.httpStatus === 403 && resAfter.decision === "error" && !afterMsgCreated) ? "PASS" : "FAIL",
+      details: `End+1s boundary: decision=${resAfter.decision.toUpperCase()} status=${resAfter.httpStatus}`
     });
   }
 
@@ -686,6 +722,84 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       messageRowCreated: msgCreated,
       verdict: pass ? "PASS" : "FAIL",
       details: "Server fetched true recruit classification 'transfer_portal' from DB. Client 'senior' spoofing ignored."
+    });
+  }
+
+  // ==========================================
+  // GROUP C: POSITIVE PATH (ALLOWED SEND)
+  // ==========================================
+
+  // --- PP1. Allowed send inside an active Contact period ---
+  {
+    const nowMs = Date.now();
+    const periodId = "PER-POSITIVE-CONTACT";
+    resetPeriodsDb([
+      {
+        id: periodId,
+        sport: "football",
+        division: "FBS",
+        period_type: "contact",
+        applies_to_class_year: "all",
+        contact_methods_allowed: ["electronic", "written", "call", "in_person"],
+        start_date: new Date(nowMs - 24 * 60 * 60 * 1000).toISOString(), // now - 1 day
+        end_date: new Date(nowMs + 24 * 60 * 60 * 1000).toISOString(),   // now + 1 day
+        season_year: new Date(nowMs).getUTCFullYear(),
+        source_citation: "NCAA Div I Contact Period (positive-path fixture)",
+        created_by: "admin_compliance_01",
+        updated_at: new Date(nowMs).toISOString()
+      }
+    ]);
+
+    const req = {
+      coach_id: "cch_fbs_freeman",
+      recruit_id: "rec_jr_hunter",
+      contact_method: "electronic"
+    };
+
+    const initialMsgCount = MESSAGES_DB.length;
+    const res = evaluateComplianceGate({
+      coach_id: req.coach_id,
+      recruit_id: req.recruit_id,
+      contact_method: req.contact_method,
+      writeAuditLog: true,
+      message_text: "Positive-path integration test message"
+    });
+
+    const auditRow = MESSAGE_SEND_ATTEMPTS_DB[0] || null;
+    const messageRow = MESSAGES_DB[0] || null;
+    const msgCreated = MESSAGES_DB.length > initialMsgCount;
+
+    // message_id must link the audit row and the message row in both directions.
+    const linkageOk =
+      !!auditRow &&
+      !!messageRow &&
+      auditRow.message_id === messageRow.id &&
+      messageRow.send_attempt_id === auditRow.id;
+
+    const pass =
+      res.httpStatus === 200 &&
+      res.decision === "allowed" &&
+      res.matched_period_id === periodId &&
+      auditRow?.decision === "allowed" &&
+      auditRow?.matched_period_id === periodId &&
+      msgCreated &&
+      linkageOk;
+
+    results.push({
+      id: "PP1",
+      group: "Group C",
+      title: "Positive Path: Allowed Send in Active Contact Period",
+      description: "Seed an active 'contact' period with current dates, then send an allowed electronic message.",
+      setupState: "One active FBS 'contact' period spanning now-1d .. now+1d.",
+      requestPayload: req,
+      expectedOutcome:
+        "Status 200 allowed; a messages row is created; a message_send_attempts row is created with decision='allowed' and matched_period_id; message_id links the two.",
+      actualStatus: res.httpStatus,
+      actualDecision: res.decision,
+      auditRowCreated: auditRow,
+      messageRowCreated: msgCreated,
+      verdict: pass ? "PASS" : "FAIL",
+      details: `decision=${res.decision} matched_period_id=${res.matched_period_id} audit_message_id=${auditRow?.message_id} message_row_id=${messageRow?.id} linkage_ok=${linkageOk}`
     });
   }
 
