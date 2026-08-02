@@ -2,10 +2,16 @@ import React, { useState } from "react";
 import { AthleteProfile, Position, GradYear, CollegeOffer, CollegeDivision } from "../types";
 import { CheckCircle2, ChevronRight, ChevronLeft, Sparkles, Plus, Trash2, ShieldCheck, Dumbbell, BookOpen, Video, Award, Target, User } from "lucide-react";
 
-interface OnboardingWizardProps {
-  profile: AthleteProfile;
-  onSaveProfile: (updated: AthleteProfile) => void;
-  onNavigateToProfile: () => void;
+import { X } from "lucide-react";
+import { INITIAL_ATHLETE_PROFILE } from "../data/mockData";
+
+export interface OnboardingWizardProps {
+  profile?: AthleteProfile;
+  initialProfile?: AthleteProfile;
+  onSaveProfile?: (updated: AthleteProfile) => void;
+  onComplete?: (updated: AthleteProfile) => void;
+  onNavigateToProfile?: () => void;
+  onClose?: () => void;
 }
 
 const STEPS = [
@@ -22,11 +28,15 @@ const POSITIONS: Position[] = ["QB", "RB", "WR", "TE", "OT", "OG", "C", "DE", "D
 
 export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   profile,
+  initialProfile,
   onSaveProfile,
+  onComplete,
   onNavigateToProfile,
+  onClose,
 }) => {
+  const baseProfile = initialProfile || profile || INITIAL_ATHLETE_PROFILE;
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [formData, setFormData] = useState<AthleteProfile>(profile);
+  const [formData, setFormData] = useState<AthleteProfile>(baseProfile);
   const [newOfferSchool, setNewOfferSchool] = useState("");
   const [newOfferDivision, setNewOfferDivision] = useState<CollegeDivision>("FBS");
   const [newOfferConf, setNewOfferConf] = useState("SEC");
@@ -138,8 +148,10 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   };
 
   const handleFinish = () => {
-    onSaveProfile(formData);
-    onNavigateToProfile();
+    if (onComplete) onComplete(formData);
+    if (onSaveProfile) onSaveProfile(formData);
+    if (onNavigateToProfile) onNavigateToProfile();
+    if (onClose) onClose();
   };
 
   const progressPercent = Math.round((currentStep / STEPS.length) * 100);
@@ -160,13 +172,27 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={handleFillDemoData}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 font-semibold text-xs transition-all shadow-md shrink-0"
-        >
-          <Sparkles className="w-4 h-4 text-amber-400" />
-          Auto-Fill 5★ Recruit Demo
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleFillDemoData}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 font-semibold text-xs transition-all shadow-md shrink-0 cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            Auto-Fill 5★ Recruit Demo
+          </button>
+          {(onClose || onNavigateToProfile) && (
+            <button
+              onClick={() => {
+                if (onClose) onClose();
+                else if (onNavigateToProfile) onNavigateToProfile();
+              }}
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer"
+              title="Close Wizard"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Progress Bar & Step Tracker */}

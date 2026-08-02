@@ -219,3 +219,49 @@ export interface CollegeCoachProfile {
   yearsExperience: number;
   activeEndorsementsCount: number;
 }
+
+export interface TransferPortalAthlete {
+  id: string;
+  fullName: string;
+  position: Position;
+  formerSchool: string;
+  formerDivision: CollegeDivision;
+  conference: string;
+  yearsEligibilityRemaining: number;
+  portalEntryDate: string;
+  status: "Active in Portal" | "Committed / Transferred" | "Withdrawn";
+  destinationSchool?: string;
+  height: string;
+  weight: number;
+  fortyTime: number;
+  gpa: number;
+  avatarUrl: string;
+  statsHighlights: string;
+  hudlUrl: string;
+  verifiedStats: boolean;
+}
+
+export interface CoachPipelineProspect {
+  id: string;
+  athleteName: string;
+  position: Position;
+  highSchoolOrSchool: string;
+  state: string;
+  gradClass: number;
+  stage: "Identified" | "Contacted" | "Offered" | "Committed";
+  rating: number; // 1-5
+  notes: string;
+  lastActivity: string;
+  avatarUrl: string;
+}
+
+export interface TimelineEvent {
+  id: string;
+  date: string;
+  type: "Offer" | "Camp" | "Ranking" | "CoachView" | "Endorsement" | "Media";
+  title: string;
+  description: string;
+  badgeText: string;
+  schoolLogo?: string;
+}
+

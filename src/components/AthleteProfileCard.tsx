@@ -15,10 +15,15 @@ import {
   Zap,
   Mic,
   RotateCcw,
+  Sliders,
+  FileText,
+  Download
 } from "lucide-react";
 import { SocialMediaShowcase } from "./SocialMediaShowcase";
 import { VideoPitchRecorder } from "./VideoPitchRecorder";
 import { EndorsementSection } from "./EndorsementSection";
+import { UnifiedRecruitingTimeline } from "./UnifiedRecruitingTimeline";
+import { RecruitComparisonModal } from "./RecruitComparisonModal";
 
 interface AthleteProfileCardProps {
   profile: AthleteProfile;
@@ -36,6 +41,18 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
   const [copied, setCopied] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [showPitchRecorderStudio, setShowPitchRecorderStudio] = useState(false);
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  const handleExportPdf = () => {
+    setIsExportingPdf(true);
+    // Simulate generation delay
+    setTimeout(() => {
+      window.print();
+      setIsExportingPdf(false);
+    }, 800);
+  };
+
 
   const handleCopyShareLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -134,10 +151,26 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
             </button>
 
             <button
+              onClick={() => setShowComparisonModal(true)}
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-950/80 hover:bg-blue-900 border border-blue-500/40 text-blue-300 font-bold text-xs transition-all shadow-md"
+            >
+              <Sliders className="w-4 h-4 text-blue-400" /> Compare Matrix
+            </button>
+
+            <button
               onClick={onEditProfile}
               className="flex items-center justify-center px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
             >
               Edit Profile
+            </button>
+
+            <button
+              onClick={handleExportPdf}
+              disabled={isExportingPdf}
+              className="flex items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all disabled:opacity-50"
+              title="Export as PDF Resume"
+            >
+              {isExportingPdf ? <RotateCcw className="w-4 h-4 animate-spin text-slate-400" /> : <Download className="w-4 h-4" />}
             </button>
 
             <button
@@ -383,6 +416,9 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
               </p>
             </div>
           </div>
+
+          {/* UNIFIED RECRUITING TIMELINE */}
+          <UnifiedRecruitingTimeline />
         </div>
 
         {/* Right Column (1/3): Academics, Targets & Social Media Feed Widget */}
@@ -483,6 +519,11 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
           </div>
         </div>
       )}
+      {/* RECRUIT COMPARISON MATRIX MODAL */}
+      <RecruitComparisonModal
+        isOpen={showComparisonModal}
+        onClose={() => setShowComparisonModal(false)}
+      />
     </div>
   );
 };

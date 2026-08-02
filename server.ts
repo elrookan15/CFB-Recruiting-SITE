@@ -3,6 +3,16 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import {
+  evaluateComplianceGate,
+  MESSAGE_SEND_ATTEMPTS_DB,
+  RECRUITING_PERIODS_DB,
+  MESSAGES_DB,
+  COACHES_DB,
+  RECRUITS_DB,
+  resetPeriodsDb
+} from "./src/complianceEngine";
+import { runComplianceTestSuite } from "./src/complianceTestSuite";
 
 dotenv.config();
 
@@ -30,6 +40,111 @@ const getGeminiClient = () => {
 // API Health Check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", service: "Gridiron Gateway API", time: new Date().toISOString() });
+});
+
+// ==========================================
+// NCAA COMPLIANCE GATE API ENDPOINTS
+// ==========================================
+
+// 5.1 GET /api/compliance/status (Read-only status check for pre-compose badge)
+app.get("/api/compliance/status", (req, res) => {
+  const coach_id = (req.query.coach_id as string) || "cch_fbs_freeman";
+  const recruit_id = (req.query.recruit_id as string) || "rec_jr_hunter";
+  const contact_method = (req.query.contact_method as string) || "electronic";
+
+  const result = evaluateComplianceGate({
+    coach_id,
+    recruit_id,
+    contact_method,
+    writeAuditLog: false // Status check is side-effect-free
+  });
+
+  return res.status(result.httpStatus).json({
+    coach_id,
+    recruit_id,
+    decision: result.decision,
+    matched_period_id: result.matched_period_id,
+    period_type_at_attempt: result.period_type_at_attempt,
+    reason: result.reason,
+    source_citation: result.source_citation
+  });
+});
+
+// 5.2 POST /api/messages/send (Authoritative send endpoint with mandatory server-side re-validation)
+app.post("/api/messages/send", (req, res) => {
+  const { coach_id, recruit_id, contact_method, message_text } = req.body;
+
+  if (!coach_id || !recruit_id) {
+    return res.status(400).json({ error: "Missing required coach_id or recruit_id in body." });
+  }
+
+  // Re-run gating logic independently on server, ignoring any compliance override claims in body
+  const result = evaluateComplianceGate({
+    coach_id,
+    recruit_id,
+    contact_method: contact_method || "electronic",
+    writeAuditLog: true, // Always writes to message_send_attempts
+    message_text,
+    raw_request_body: req.body
+  });
+
+  if (result.decision !== "allowed") {
+    return res.status(result.httpStatus).json({
+      error: "MESSAGE_BLOCKED_BY_COMPLIANCE_GATE",
+      decision: result.decision,
+      reason: result.reason,
+      matched_period_id: result.matched_period_id,
+      audit_log_id: result.audit_log_id,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  return res.status(200).json({
+    status: "success",
+    decision: "allowed",
+    message_id: result.message_id,
+    audit_log_id: result.audit_log_id,
+    matched_period_id: result.matched_period_id,
+    reason: result.reason
+  });
+});
+
+// GET /api/compliance/audit-logs (Return server-side audit attempts)
+app.get("/api/compliance/audit-logs", (req, res) => {
+  res.json({
+    total_logs: MESSAGE_SEND_ATTEMPTS_DB.length,
+    logs: MESSAGE_SEND_ATTEMPTS_DB
+  });
+});
+
+// GET /api/compliance/recruiting-periods
+app.get("/api/compliance/recruiting-periods", (req, res) => {
+  res.json({
+    total_periods: RECRUITING_PERIODS_DB.length,
+    periods: RECRUITING_PERIODS_DB
+  });
+});
+
+// POST /api/compliance/run-tests (Executes Group A & Group B verification suite server-side)
+app.post("/api/compliance/run-tests", (req, res) => {
+  try {
+    const suiteResults = runComplianceTestSuite();
+    const passedCount = suiteResults.filter((r) => r.verdict === "PASS").length;
+    const failedCount = suiteResults.filter((r) => r.verdict === "FAIL").length;
+
+    res.json({
+      timestamp: new Date().toISOString(),
+      summary: {
+        total: suiteResults.length,
+        passed: passedCount,
+        failed: failedCount,
+        status: failedCount === 0 ? "ALL_TESTS_PASSED" : "TEST_SUITE_FAILED"
+      },
+      results: suiteResults
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Failed to execute compliance test suite." });
+  }
 });
 
 // AI Recruiting Email & DM Generator

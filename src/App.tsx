@@ -12,6 +12,9 @@ import { CoachMessagingFeed } from "./components/CoachMessagingFeed";
 import { TechDocsView } from "./components/TechDocsView";
 import { TopWeeklyHighlights } from "./components/TopWeeklyHighlights";
 import { CoachesDirectory } from "./components/CoachesDirectory";
+import { TransferPortalModule } from "./components/TransferPortalModule";
+import { CoachPipelineBoard } from "./components/CoachPipelineBoard";
+import { ComplianceDashboard } from "./components/ComplianceDashboard";
 
 export function App() {
   const [profile, setProfile] = useState<AthleteProfile>(INITIAL_ATHLETE_PROFILE);
@@ -20,10 +23,13 @@ export function App() {
     | "top250"
     | "highlights"
     | "coaches"
+    | "transfer_portal"
+    | "coach_pipeline"
     | "camps"
     | "ai_assistant"
     | "ncaa"
     | "coach_views"
+    | "compliance"
     | "tech_docs"
   >("profile");
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -74,6 +80,18 @@ export function App() {
 
         {activeTab === "coaches" && <CoachesDirectory />}
 
+        {activeTab === "transfer_portal" && (
+          <div className="max-w-6xl mx-auto px-4 py-8">
+            <TransferPortalModule />
+          </div>
+        )}
+
+        {activeTab === "coach_pipeline" && (
+          <div className="max-w-6xl mx-auto px-4 py-8">
+            <CoachPipelineBoard />
+          </div>
+        )}
+
         {activeTab === "camps" && <CampSearchEngine />}
 
         {activeTab === "ai_assistant" && (
@@ -84,23 +102,35 @@ export function App() {
 
         {activeTab === "coach_views" && <CoachMessagingFeed />}
 
+        {activeTab === "compliance" && <ComplianceDashboard />}
+
         {activeTab === "tech_docs" && <TechDocsView />}
       </main>
 
-      {/* 25-30 QUESTION ONBOARDING WIZARD MODAL */}
+      {/* 25-30 QUESTION ONBOARDING WIZARD MODAL OVERLAY */}
       {showOnboarding && (
-        <OnboardingWizard
-          initialProfile={profile}
-          onComplete={handleCompleteOnboarding}
-          onClose={() => setShowOnboarding(false)}
-        />
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md overflow-y-auto p-4 sm:p-6 flex justify-center items-start">
+          <div className="w-full max-w-5xl my-auto">
+            <OnboardingWizard
+              initialProfile={profile}
+              onComplete={handleCompleteOnboarding}
+              onClose={() => setShowOnboarding(false)}
+            />
+          </div>
+        </div>
       )}
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-500">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>© {new Date().getFullYear()} Gridiron Gateway Recruiting Network. Built for High School Student-Athletes & College Coaches.</p>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              onClick={() => setActiveTab("compliance")}
+              className="hover:text-amber-400 underline font-semibold flex items-center gap-1"
+            >
+              NIL & Compliance Gate
+            </button>
             <button
               onClick={() => setActiveTab("tech_docs")}
               className="hover:text-emerald-400 underline font-semibold"

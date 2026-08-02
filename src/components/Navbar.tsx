@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users } from "lucide-react";
+import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users, RefreshCw, ListFilter, Code, ShieldCheck } from "lucide-react";
 
 interface NavbarProps {
   activeTab: string;
@@ -185,6 +185,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab("transfer_portal")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "transfer_portal"
+                  ? "bg-slate-800 text-blue-300 border border-blue-500/30 shadow-inner"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <RefreshCw className="w-4 h-4 text-blue-400" />
+              Transfer Portal
+            </button>
+
+            <button
+              onClick={() => setActiveTab("coach_pipeline")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "coach_pipeline"
+                  ? "bg-slate-800 text-purple-300 border border-purple-500/30 shadow-inner"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <ListFilter className="w-4 h-4 text-purple-400" />
+              Coach Board
+            </button>
+
+            <button
               onClick={() => setActiveTab("coach_views")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all relative ${
                 activeTab === "coach_views"
@@ -194,6 +218,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <MessageSquare className="w-4 h-4 text-rose-400" />
               Messaging
+            </button>
+
+            <button
+              onClick={() => setActiveTab("compliance")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "compliance"
+                  ? "bg-slate-800 text-amber-300 border border-amber-500/30 shadow-inner"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 text-amber-400" />
+              NIL & Gate
+            </button>
+
+            <button
+              onClick={() => setActiveTab("tech_docs")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "tech_docs"
+                  ? "bg-slate-800 text-sky-300 border border-sky-500/30 shadow-inner"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <Code className="w-4 h-4 text-sky-400" />
+              Arch Specs
             </button>
           </nav>
 
@@ -221,9 +269,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Mobile Navigation Row */}
         <div className="flex lg:hidden overflow-x-auto pb-2 gap-1.5 no-scrollbar text-xs border-t border-slate-800/80 pt-2">
           <button
-            onClick={() => setActiveTab("leaderboard")}
+            onClick={() => setActiveTab("top250")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "leaderboard" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "top250" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
             }`}
           >
             Top 250
@@ -245,6 +293,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             Coaches
           </button>
           <button
+            onClick={() => setActiveTab("transfer_portal")}
+            className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
+              activeTab === "transfer_portal" ? "bg-blue-600 text-white font-bold" : "bg-slate-900 text-slate-300"
+            }`}
+          >
+            Transfer Portal
+          </button>
+          <button
+            onClick={() => setActiveTab("coach_pipeline")}
+            className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
+              activeTab === "coach_pipeline" ? "bg-purple-600 text-white font-bold" : "bg-slate-900 text-slate-300"
+            }`}
+          >
+            Coach Board
+          </button>
+          <button
             onClick={() => setActiveTab("camps")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
               activeTab === "camps" ? "bg-amber-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
@@ -253,7 +317,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             Camps
           </button>
           <button
-            onClick={() => setActiveTab("onboarding")}
+            onClick={() => (onOpenOnboarding ? onOpenOnboarding() : setActiveTab("profile"))}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
               activeTab === "onboarding" ? "bg-cyan-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
             }`}
@@ -261,28 +325,44 @@ export const Navbar: React.FC<NavbarProps> = ({
             Profile Builder
           </button>
           <button
-            onClick={() => setActiveTab("ai-assistant")}
+            onClick={() => setActiveTab("ai_assistant")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "ai-assistant" ? "bg-purple-600 text-white font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "ai_assistant" ? "bg-purple-600 text-white font-bold" : "bg-slate-900 text-slate-300"
             }`}
           >
             AI Pitcher
           </button>
           <button
-            onClick={() => setActiveTab("ncaa-tracker")}
+            onClick={() => setActiveTab("ncaa")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "ncaa-tracker" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "ncaa" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
             }`}
           >
             Core GPA
           </button>
           <button
-            onClick={() => setActiveTab("messages")}
+            onClick={() => setActiveTab("coach_views")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "messages" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "coach_views" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
             }`}
           >
             Messaging
+          </button>
+          <button
+            onClick={() => setActiveTab("compliance")}
+            className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
+              activeTab === "compliance" ? "bg-amber-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+            }`}
+          >
+            NIL & Gate
+          </button>
+          <button
+            onClick={() => setActiveTab("tech_docs")}
+            className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
+              activeTab === "tech_docs" ? "bg-sky-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+            }`}
+          >
+            Arch Specs
           </button>
         </div>
       </div>

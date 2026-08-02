@@ -1,4 +1,4 @@
-import { AthleteProfile, TopRecruit, CampEntry, CoachView, NcaaCourse, SocialPost, CoachEndorsement, WeeklyHighlight, CollegeCoachProfile } from "../types";
+import { AthleteProfile, TopRecruit, CampEntry, CoachView, NcaaCourse, SocialPost, CoachEndorsement, WeeklyHighlight, CollegeCoachProfile, TransferPortalAthlete, CoachPipelineProspect, TimelineEvent } from "../types";
 
 export const INITIAL_ATHLETE_PROFILE: AthleteProfile = {
   fullName: "Caden 'Rocket' Carter",
@@ -1003,4 +1003,184 @@ export const MOCK_COLLEGE_COACHES: CollegeCoachProfile[] = [
     activeEndorsementsCount: 31
   }
 ];
+
+export const MOCK_TRANSFER_PORTAL_ATHLETES: TransferPortalAthlete[] = [
+  {
+    id: "tp-1",
+    fullName: "Ty'Simpson Vance",
+    position: "QB",
+    formerSchool: "Alabama Crimson Tide",
+    formerDivision: "FBS",
+    conference: "SEC",
+    yearsEligibilityRemaining: 2,
+    portalEntryDate: "Dec 12, 2025",
+    status: "Active in Portal",
+    height: "6'2\"",
+    weight: 215,
+    fortyTime: 4.58,
+    gpa: 3.65,
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+    statsHighlights: "Passing: 1,840 Yds, 18 TDs, 4 INTs | Rushing: 310 Yds, 5 TDs in 6 Starts",
+    hudlUrl: "https://hudl.com/v/sample",
+    verifiedStats: true
+  },
+  {
+    id: "tp-2",
+    fullName: "Kalonji 'King' Davis",
+    position: "WR",
+    formerSchool: "USC Trojans",
+    formerDivision: "FBS",
+    conference: "Big Ten",
+    yearsEligibilityRemaining: 3,
+    portalEntryDate: "Dec 15, 2025",
+    status: "Active in Portal",
+    height: "6'3\"",
+    weight: 202,
+    fortyTime: 4.41,
+    gpa: 3.40,
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+    statsHighlights: "52 Receptions, 840 Yds, 9 TDs | 16.1 Yds per Catch",
+    hudlUrl: "https://hudl.com/v/sample",
+    verifiedStats: true
+  },
+  {
+    id: "tp-3",
+    fullName: "Braylon Washington",
+    position: "EDGE",
+    formerSchool: "Clemson Tigers",
+    formerDivision: "FBS",
+    conference: "ACC",
+    yearsEligibilityRemaining: 1,
+    portalEntryDate: "Jan 03, 2026",
+    status: "Committed / Transferred",
+    destinationSchool: "University of Texas",
+    height: "6'5\"",
+    weight: 258,
+    fortyTime: 4.65,
+    gpa: 3.80,
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+    statsHighlights: "44 Tackles, 11.5 TFL, 8.5 Sacks, 3 Forced Fumbles",
+    hudlUrl: "https://hudl.com/v/sample",
+    verifiedStats: true
+  },
+  {
+    id: "tp-4",
+    fullName: "Deonte Carter",
+    position: "CB",
+    formerSchool: "TCU Horned Frogs",
+    formerDivision: "FBS",
+    conference: "Big 12",
+    yearsEligibilityRemaining: 2,
+    portalEntryDate: "Dec 18, 2025",
+    status: "Active in Portal",
+    height: "6'0\"",
+    weight: 190,
+    fortyTime: 4.43,
+    gpa: 3.55,
+    avatarUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80",
+    statsHighlights: "38 Tackles, 5 Interceptions, 12 Pass Breakups",
+    hudlUrl: "https://hudl.com/v/sample",
+    verifiedStats: true
+  }
+];
+
+export const MOCK_COACH_PIPELINE_PROSPECTS: CoachPipelineProspect[] = [
+  {
+    id: "pip-1",
+    athleteName: "Caden 'Rocket' Carter",
+    position: "QB",
+    highSchoolOrSchool: "Allen High School",
+    state: "TX",
+    gradClass: 2026,
+    stage: "Offered",
+    rating: 5,
+    notes: "Top QB target in Texas. Extended official offer on June 15. Scheduled Official Visit for Sept 12 game.",
+    lastActivity: "2 hours ago — Viewed Hudl Reel",
+    avatarUrl: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80"
+  },
+  {
+    id: "pip-2",
+    athleteName: "Dakorien Moore",
+    position: "WR",
+    highSchoolOrSchool: "Duncanville High School",
+    state: "TX",
+    gradClass: 2025,
+    stage: "Committed",
+    rating: 5,
+    notes: "Committed! 5-star WR talent. Letter of Intent expected in December.",
+    lastActivity: "Yesterday — Phone Call with Head Coach",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
+  },
+  {
+    id: "pip-3",
+    athleteName: "Jackson Cantwell",
+    position: "OT",
+    highSchoolOrSchool: "Nixa High School",
+    state: "MO",
+    gradClass: 2026,
+    stage: "Contacted",
+    rating: 4,
+    notes: "Elite 6'7\" 300lb tackle prospect. Sent spring evaluation notes. Visiting school during April contact period.",
+    lastActivity: "3 days ago — Direct Message Sent",
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80"
+  },
+  {
+    id: "pip-4",
+    athleteName: "Elijah Griffin",
+    position: "DT",
+    highSchoolOrSchool: "Savannah Country Day",
+    state: "GA",
+    gradClass: 2025,
+    stage: "Identified",
+    rating: 5,
+    notes: "Dominant DT disruptor. Reviewing core GPA and transcript before official offer release.",
+    lastActivity: "5 days ago — Added to Pipeline",
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+  }
+];
+
+export const MOCK_TIMELINE_EVENTS: TimelineEvent[] = [
+  {
+    id: "tl-1",
+    date: "July 24, 2026",
+    type: "Endorsement",
+    title: "Coach Endorsement Added",
+    description: "Coach Lee Wiginton (Allen HS Head Coach) co-signed Caden's 4.52s 40-time and diagnostic pre-snap leadership.",
+    badgeText: "+25 Composite Pts"
+  },
+  {
+    id: "tl-2",
+    date: "June 18, 2026",
+    type: "Offer",
+    title: "Division I Scholarship Offer Extended",
+    description: "Coach Steve Sarkisian & Coach AJ Milwee officially offered a scholarship to the Texas Longhorns.",
+    badgeText: "Power 4 Offer",
+    schoolLogo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
+  },
+  {
+    id: "tl-3",
+    date: "June 15, 2026",
+    type: "Camp",
+    title: "Texas Longhorns Elite Passing Camp",
+    description: "Recorded 4.52s laser 40-yard dash and threw 18/20 in red-zone 7v7 scrimmage.",
+    badgeText: "Camp MVP"
+  },
+  {
+    id: "tl-4",
+    date: "May 10, 2026",
+    type: "Ranking",
+    title: "Top 250 Leaderboard Rank Upgraded",
+    description: "Ascended to #2 Overall National Quarterback following Under Armour Next regional combine performance.",
+    badgeText: "Rank #2 QB"
+  },
+  {
+    id: "tl-5",
+    date: "April 28, 2026",
+    type: "CoachView",
+    title: "Coach Profile View Spike",
+    description: "4 D1 college recruiters (Georgia, Ohio State, Alabama, Notre Dame) viewed verified film within 24 hours.",
+    badgeText: "4 D1 Coaches"
+  }
+];
+
 
