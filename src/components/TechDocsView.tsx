@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Server, Database, Shield, Code2, Layers, Search, Lock, DollarSign, Scale, FileText, AlertCircle, CheckCircle2, Landmark, HelpCircle, UserCheck, Sparkles, Building2 } from "lucide-react";
+import { Server, Database, Shield, Code2, Layers, Search, Lock, DollarSign, Scale, FileText, AlertCircle, CheckCircle2, Landmark, HelpCircle, UserCheck, Sparkles, Building2, BrainCircuit } from "lucide-react";
 
 export const TechDocsView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"architecture" | "nil_guide">("nil_guide");
@@ -379,6 +379,57 @@ recruiting_periods {
                 <div>Algolia Indexing Queue: Denormalized per recruit</div>
                 <div>Geo-Search: PostGIS / aroundLatLng (50 mi)</div>
                 <div>Cache Layer: Redis query caching (60s TTL)</div>
+              </div>
+            </div>
+          </div>
+
+          {/* NEW: SECTION 11, SECTION 12 & SECTION 2 ARCHITECTURE */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-3">
+              <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+                <BrainCircuit className="w-5 h-5" /> Section 2: Scheme Fit ML Engine
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Scores prospects 0–100 against individual college programs based on 5-year signee anthropometric archetypes, offensive/defensive scheme tendencies, and roster age curves.
+              </p>
+
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs font-mono text-slate-300">
+                <div>Model: Program-Specific ML Multi-Vector</div>
+                <div>Inputs: Height, Weight, Arm Length, Scheme, GPA</div>
+                <div>Boards: Realistic (70+), Reach, Safety</div>
+                <div>Endpoints: /api/scheme-fit/evaluate</div>
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-3">
+              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                <Server className="w-5 h-5" /> Section 11: College CRM Pipe Specs
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Infrastructure pipe delivering verified prospect payloads into ARMS, Teamworks, and Front Rush via standardized JSON/REST, XML/SOAP, and GraphQL Webhooks.
+              </p>
+
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs font-mono text-slate-300">
+                <div>Endpoint: POST /api/crm/sync</div>
+                <div>Connectors: ARMS, Teamworks, Front Rush</div>
+                <div>Monetization: $12k/yr Power 4 Enterprise Pipe</div>
+                <div>Payload: Cryptographic Laser Hash + NCAA ID</div>
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-3">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                <Shield className="w-5 h-5" /> Section 12: Live Combine & BLE Engine
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Event-day iPad/mobile view powering bib check-in, Bluetooth Low Energy laser timing sync (Dashr/Brower/Zybek), instant parent SMS scorecards, and same-day verified badge issuance.
+              </p>
+
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs font-mono text-slate-300">
+                <div>BLE WebBluetooth API / Mobile SDK</div>
+                <div>Instant Parent SMS: Twilio / AWS SNS</div>
+                <div>Live Standings: Websocket / Server-Sent Events</div>
+                <div>Badge Issuance: Ed25519 Signed Verification Hash</div>
               </div>
             </div>
           </div>

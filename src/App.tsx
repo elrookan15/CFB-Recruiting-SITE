@@ -15,12 +15,16 @@ import { CoachesDirectory } from "./components/CoachesDirectory";
 import { TransferPortalModule } from "./components/TransferPortalModule";
 import { CoachPipelineBoard } from "./components/CoachPipelineBoard";
 import { ComplianceDashboard } from "./components/ComplianceDashboard";
+import { CrmSyncModule } from "./components/CrmSyncModule";
+import { LiveCombineModule } from "./components/LiveCombineModule";
+import { SchemeFitEngine } from "./components/SchemeFitEngine";
 
 export function App() {
   const [profile, setProfile] = useState<AthleteProfile>(INITIAL_ATHLETE_PROFILE);
   const [activeTab, setActiveTab] = useState<
     | "profile"
     | "top250"
+    | "scheme_fit"
     | "highlights"
     | "coaches"
     | "transfer_portal"
@@ -30,6 +34,8 @@ export function App() {
     | "ncaa"
     | "coach_views"
     | "compliance"
+    | "crm_sync"
+    | "combine_mode"
     | "tech_docs"
   >("profile");
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -72,6 +78,13 @@ export function App() {
           </div>
         )}
 
+        {activeTab === "scheme_fit" && (
+          <SchemeFitEngine
+            athleteProfile={profile}
+            onOpenAiAssistant={() => setActiveTab("ai_assistant")}
+          />
+        )}
+
         {activeTab === "highlights" && (
           <div className="max-w-6xl mx-auto px-4 py-8">
             <TopWeeklyHighlights />
@@ -103,6 +116,10 @@ export function App() {
         {activeTab === "coach_views" && <CoachMessagingFeed />}
 
         {activeTab === "compliance" && <ComplianceDashboard />}
+
+        {activeTab === "crm_sync" && <CrmSyncModule profile={profile} />}
+
+        {activeTab === "combine_mode" && <LiveCombineModule />}
 
         {activeTab === "tech_docs" && <TechDocsView />}
       </main>

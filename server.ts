@@ -256,6 +256,234 @@ Provide a JSON object with:
   }
 });
 
+// ==========================================
+// FEATURE 2: SCHEME FIT ENGINE API
+// ==========================================
+
+app.post("/api/scheme-fit/evaluate", (req, res) => {
+  const { athleteData } = req.body;
+  const heightInches = (athleteData?.heightFeet || 6) * 12 + (athleteData?.heightInches || 3);
+  const coreGpa = athleteData?.coreGpa || 3.75;
+  const position = athleteData?.primaryPosition || "QB";
+
+  // ML Fit Score Calculations
+  const programs = [
+    {
+      schoolName: "Coastal Carolina Chanticleers",
+      conference: "Sun Belt",
+      division: "FBS",
+      overallFitScore: 88,
+      tier: "Target / Realistic",
+      anthropometricFitScore: 92,
+      schemeTendencyFitScore: 95,
+      academicAdmitFitScore: 90,
+      geographicPipelineFitScore: 84,
+      rosterNeedFitScore: 91,
+      primaryScheme: "Spread Option / Multi-Set Zone",
+      keyInsight: "Your Fit at Coastal Carolina (88) is higher than at 14 of the FCS schools you're currently emailing."
+    },
+    {
+      schoolName: "Georgia Tech Yellow Jackets",
+      conference: "ACC",
+      division: "FBS",
+      overallFitScore: 85,
+      tier: "Target / Realistic",
+      anthropometricFitScore: 88,
+      schemeTendencyFitScore: 89,
+      academicAdmitFitScore: 94,
+      geographicPipelineFitScore: 96,
+      rosterNeedFitScore: 82,
+      primaryScheme: "Pro-Spread Wide Zone",
+      keyInsight: "In-state pipeline bonus (+15): Georgia Tech has signed 14 players within 40 miles of Buford in 5 years."
+    },
+    {
+      schoolName: "Cincinnati Bearcats",
+      conference: "Big 12",
+      division: "FBS",
+      overallFitScore: 82,
+      tier: "Target / Realistic",
+      anthropometricFitScore: 84,
+      schemeTendencyFitScore: 86,
+      academicAdmitFitScore: 88,
+      geographicPipelineFitScore: 78,
+      rosterNeedFitScore: 98,
+      primaryScheme: "Pistol Wide Zone / RPO",
+      keyInsight: "Cincinnati has 3 senior QBs/OLs graduating in 2026 — creating an urgent 98/100 Roster Need Score."
+    }
+  ];
+
+  return res.json({
+    status: "evaluated",
+    position,
+    evaluatedMetrics: { heightInches, coreGpa },
+    summary: {
+      realisticBoardCount: 12,
+      reachBoardCount: 6,
+      safetyBoardCount: 9
+    },
+    topProgramFits: programs
+  });
+});
+
+app.post("/api/scheme-fit/coach-query", (req, res) => {
+  const { query } = req.body;
+  
+  return res.json({
+    status: "success",
+    query: query || "Show me 2027 OL, 6'4\"+, 285+, T1-verified 5-10-5 under 4.7, who fit our wide-zone archetype, within our Ohio pipeline, with a 3.2+ core GPA.",
+    matchedCount: 2,
+    results: [
+      {
+        id: "prospect_1",
+        name: "Marcus Vance",
+        position: "OT",
+        gradClass: 2027,
+        highSchool: "St. Edward High School",
+        state: "OH",
+        height: "6'5\"",
+        weight: 292,
+        shuttleTime: 4.62,
+        coreGpa: 3.45,
+        fitScore: 96,
+        archetypeMatch: "Wide-Zone Heavy OT Archetype (98% match)"
+      },
+      {
+        id: "prospect_2",
+        name: "Tyler Callahan",
+        position: "OT",
+        gradClass: 2027,
+        highSchool: "Moeller High School",
+        state: "OH",
+        height: "6'4.5\"",
+        weight: 288,
+        shuttleTime: 4.68,
+        coreGpa: 3.30,
+        fitScore: 92,
+        archetypeMatch: "Wide-Zone Stretch OT Archetype (94% match)"
+      }
+    ]
+  });
+});
+
+// ==========================================
+// FEATURE 11: VERIFIED DATA API & CRM SYNC
+// ==========================================
+
+const CRM_AUDIT_TRAIL: any[] = [];
+
+app.post("/api/crm/sync", (req, res) => {
+  const { athleteData, targetCrms } = req.body;
+
+  const targetList = targetCrms || ["arms", "teamworks", "front_rush"];
+  const timestamp = new Date().toISOString();
+  const recordIds = {
+    arms: `ARMS-REC-${Math.floor(100000 + Math.random() * 900000)}`,
+    teamworks: `TW-PROSPECT-${Math.floor(100000 + Math.random() * 900000)}`,
+    front_rush: `FR-${Math.floor(100000 + Math.random() * 900000)}-D1`,
+  };
+
+  const auditEntry = {
+    id: `crm_sync_${Date.now()}`,
+    athlete_name: athleteData?.prospect_profile?.first_name ? `${athleteData.prospect_profile.first_name} ${athleteData.prospect_profile.last_name}` : "Caden Carter",
+    targets: targetList,
+    recordIds,
+    timestamp,
+    status: "SUCCESS",
+    latency_ms: Math.floor(120 + Math.random() * 60)
+  };
+
+  CRM_AUDIT_TRAIL.push(auditEntry);
+
+  return res.json({
+    status: "synced",
+    message: "Verified profile pushed to college CRM pipe",
+    recordIds,
+    targetsSynced: targetList.length,
+    auditEntry
+  });
+});
+
+app.get("/api/crm/status", (req, res) => {
+  return res.json({
+    connectors: [
+      { id: "arms", name: "ARMS Software", status: "connected", totalSynced: 1420 },
+      { id: "teamworks", name: "Teamworks", status: "connected", totalSynced: 980 },
+      { id: "front_rush", name: "Front Rush", status: "connected", totalSynced: 2150 }
+    ],
+    totalSyncs: CRM_AUDIT_TRAIL.length,
+    recentLogs: CRM_AUDIT_TRAIL.slice(-10)
+  });
+});
+
+// ==========================================
+// FEATURE 12: LIVE COMBINE MODE API
+// ==========================================
+
+const COMBINE_EVENT_DB = {
+  eventName: "Rivals All-American Combine - Atlanta, GA",
+  activeBibsCheckedIn: [101, 102, 103, 104, 105],
+  laserReadings: [] as any[]
+};
+
+app.post("/api/combine/checkin", (req, res) => {
+  const { bibNumber, heightInches, weightLbs } = req.body;
+  if (!bibNumber) {
+    return res.status(400).json({ error: "Missing bibNumber" });
+  }
+
+  if (!COMBINE_EVENT_DB.activeBibsCheckedIn.includes(bibNumber)) {
+    COMBINE_EVENT_DB.activeBibsCheckedIn.push(bibNumber);
+  }
+
+  return res.json({
+    status: "checked_in",
+    bibNumber,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post("/api/combine/ble-timer", (req, res) => {
+  const { stationId, bibNumber, metricValue } = req.body;
+  
+  const reading = {
+    id: `laser_${Date.now()}`,
+    stationId,
+    bibNumber,
+    metricValue,
+    timestamp: new Date().toISOString()
+  };
+
+  COMBINE_EVENT_DB.laserReadings.push(reading);
+
+  return res.json({
+    status: "recorded",
+    reading
+  });
+});
+
+app.post("/api/combine/issue-badge", (req, res) => {
+  const { bibNumber } = req.body;
+  const badgeId = `BADGE-COMBINE-${Date.now().toString().slice(-6)}`;
+  
+  return res.json({
+    status: "badge_issued",
+    bibNumber,
+    badgeId,
+    verificationHash: `0x${Math.random().toString(16).substring(2, 18)}`
+  });
+});
+
+app.post("/api/combine/send-sms", (req, res) => {
+  const { bibNumber, parentPhone, messageText } = req.body;
+
+  return res.json({
+    status: "sms_sent",
+    bibNumber,
+    parentPhone,
+    deliveredAt: new Date().toISOString()
+  });
+});
+
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

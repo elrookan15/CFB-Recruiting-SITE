@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users, RefreshCw, ListFilter, Code, ShieldCheck } from "lucide-react";
+import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users, RefreshCw, ListFilter, Code, ShieldCheck, Share2, Smartphone, Target } from "lucide-react";
 
 interface NavbarProps {
   activeTab: string;
@@ -110,6 +110,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Award className="w-4 h-4 text-emerald-400" />
               Top 250
+            </button>
+
+            <button
+              onClick={() => setActiveTab("scheme_fit")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "scheme_fit"
+                  ? "bg-gradient-to-r from-indigo-900/80 to-slate-800 text-indigo-300 border border-indigo-500/40 shadow-inner"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <Target className="w-4 h-4 text-indigo-400 animate-pulse" />
+              Scheme Fit Zillow
             </button>
 
             <button
@@ -233,6 +245,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab("crm_sync")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "crm_sync"
+                  ? "bg-slate-800 text-emerald-300 border border-emerald-500/30 shadow-inner"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <Share2 className="w-4 h-4 text-emerald-400" />
+              CRM Pipe
+            </button>
+
+            <button
+              onClick={() => setActiveTab("combine_mode")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "combine_mode"
+                  ? "bg-slate-800 text-amber-300 border border-amber-500/30 shadow-inner"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <Smartphone className="w-4 h-4 text-amber-400 animate-pulse" />
+              Live Combine
+            </button>
+
+            <button
               onClick={() => setActiveTab("tech_docs")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "tech_docs"
@@ -275,6 +311,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             Top 250
+          </button>
+          <button
+            onClick={() => setActiveTab("scheme_fit")}
+            className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
+              activeTab === "scheme_fit" ? "bg-indigo-600 text-white font-bold" : "bg-slate-900 text-slate-300"
+            }`}
+          >
+            Scheme Fit Zillow
           </button>
           <button
             onClick={() => setActiveTab("highlights")}
@@ -355,6 +399,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             NIL & Gate
+          </button>
+          <button
+            onClick={() => setActiveTab("crm_sync")}
+            className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
+              activeTab === "crm_sync" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+            }`}
+          >
+            CRM Pipe
+          </button>
+          <button
+            onClick={() => setActiveTab("combine_mode")}
+            className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
+              activeTab === "combine_mode" ? "bg-amber-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+            }`}
+          >
+            Live Combine
           </button>
           <button
             onClick={() => setActiveTab("tech_docs")}

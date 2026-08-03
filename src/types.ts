@@ -265,3 +265,114 @@ export interface TimelineEvent {
   schoolLogo?: string;
 }
 
+// ==========================================
+// FEATURE 11: COLLEGE CRM SYNC TYPES
+// ==========================================
+export interface CrmConnector {
+  id: "arms" | "teamworks" | "front_rush" | "custom_webhook";
+  name: string;
+  logoUrl?: string;
+  status: "connected" | "disconnected" | "syncing" | "failed";
+  lastSyncTimestamp?: string;
+  totalRecordsSynced: number;
+  apiKeyConfigured: boolean;
+  webhookUrl: string;
+  pipePlan: "Power 4 Enterprise Pipe" | "D1 / Group of 5 Pipe" | "Camp Operator Pipeline";
+  endpointFormat: "JSON/REST" | "XML/SOAP" | "GraphQL";
+}
+
+export interface CrmSyncLog {
+  id: string;
+  targetCrm: "ARMS" | "Teamworks" | "Front Rush" | "Custom Webhook";
+  status: "SUCCESS" | "FAILED" | "PENDING";
+  crmRecordId: string;
+  auditHash: string;
+  timestamp: string;
+  responseMs: number;
+  athleteName: string;
+}
+
+// ==========================================
+// FEATURE 12: LIVE COMBINE MODE TYPES
+// ==========================================
+export interface CombineAthleteBib {
+  bibNumber: number;
+  athleteId: string;
+  athleteName: string;
+  position: Position;
+  gradClass: number;
+  highSchool: string;
+  checkInStatus: "Registered" | "Checked-In" | "Testing" | "Completed";
+  heightInches: number;
+  weightLbs: number;
+  handSizeInches: number;
+  armLengthInches: number;
+  parentPhone: string;
+  badgeIssued: boolean;
+  verifiedBadgeId?: string;
+  fortyTime?: number;
+  shuttleTime?: number;
+  verticalJump?: number;
+  broadJumpInches?: number;
+  benchReps?: number;
+}
+
+export interface BleStation {
+  id: string;
+  stationName: string;
+  metricType: "40-Yard Laser" | "5-10-5 Shuttle" | "Vertical Jump" | "Broad Jump";
+  deviceHardware: "Dashr BLE Laser v3" | "Brower Timing System" | "Zybek Laser Gate" | "SmartSpeed Wireless";
+  status: "CONNECTED" | "MEASURING" | "STANDBY" | "OFFLINE";
+  batteryLevel: number;
+  signalDbm: number;
+  lastReading?: { bibNumber: number; value: number; timestamp: string };
+}
+
+export interface ParentSmsLog {
+  id: string;
+  bibNumber: number;
+  athleteName: string;
+  parentPhone: string;
+  messageText: string;
+  status: "DELIVERED" | "QUEUED" | "FAILED";
+  timestamp: string;
+}
+
+// ==========================================
+// FEATURE 2: SCHEME FIT ENGINE TYPES
+// ==========================================
+export interface ProgramFitScore {
+  schoolId: string;
+  schoolName: string;
+  logoUrl?: string;
+  conference: string;
+  division: CollegeDivision;
+  overallFitScore: number; // 0-100
+  tier: "Target / Realistic" | "Reach" | "Safety";
+  
+  // Breakdown Sub-Scores (0-100)
+  anthropometricFitScore: number; // Height, weight, arm length vs 5-yr signee archetype
+  schemeTendencyFitScore: number; // Offense/Defense scheme fit (e.g. Wide-Zone, 4-2-5)
+  academicAdmitFitScore: number; // Core GPA & SAT vs program threshold
+  geographicPipelineFitScore: number; // State/pipeline recruiting history
+  rosterNeedFitScore: number; // Projected scholarship openings & senior age curve
+  
+  primaryScheme: string; // e.g. "Wide-Zone Stretch / Power Spread"
+  signeeArchetypeSummary: string; // e.g. "Avg OL Signee: 6'4.5\", 292 lbs, 33\" arms"
+  projectedOpenings: number; // e.g. 3 scholarship spots in Class of 2026
+  keyInsight: string; // e.g. "Your Fit at Coastal Carolina (81) is higher than at 14 FCS schools you're emailing."
+}
+
+export interface CoachSchemeFitQuery {
+  position: Position;
+  gradClass: number;
+  minHeightInches: number;
+  minWeightLbs: number;
+  maxShuttleTime?: number;
+  minCoreGpa: number;
+  targetSchemeArchetype: string;
+  geographicPipelineRegion: string;
+}
+
+
+
