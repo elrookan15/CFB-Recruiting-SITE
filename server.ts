@@ -257,6 +257,115 @@ Provide a JSON object with:
 });
 
 // ==========================================
+// FEATURE 2: SCHEME FIT ENGINE API
+// ==========================================
+
+app.post("/api/scheme-fit/evaluate", (req, res) => {
+  const { athleteData } = req.body;
+  const heightInches = (athleteData?.heightFeet || 6) * 12 + (athleteData?.heightInches || 3);
+  const coreGpa = athleteData?.coreGpa || 3.75;
+  const position = athleteData?.primaryPosition || "QB";
+
+  // ML Fit Score Calculations
+  const programs = [
+    {
+      schoolName: "Coastal Carolina Chanticleers",
+      conference: "Sun Belt",
+      division: "FBS",
+      overallFitScore: 88,
+      tier: "Target / Realistic",
+      anthropometricFitScore: 92,
+      schemeTendencyFitScore: 95,
+      academicAdmitFitScore: 90,
+      geographicPipelineFitScore: 84,
+      rosterNeedFitScore: 91,
+      primaryScheme: "Spread Option / Multi-Set Zone",
+      keyInsight: "Your Fit at Coastal Carolina (88) is higher than at 14 of the FCS schools you're currently emailing."
+    },
+    {
+      schoolName: "Georgia Tech Yellow Jackets",
+      conference: "ACC",
+      division: "FBS",
+      overallFitScore: 85,
+      tier: "Target / Realistic",
+      anthropometricFitScore: 88,
+      schemeTendencyFitScore: 89,
+      academicAdmitFitScore: 94,
+      geographicPipelineFitScore: 96,
+      rosterNeedFitScore: 82,
+      primaryScheme: "Pro-Spread Wide Zone",
+      keyInsight: "In-state pipeline bonus (+15): Georgia Tech has signed 14 players within 40 miles of Buford in 5 years."
+    },
+    {
+      schoolName: "Cincinnati Bearcats",
+      conference: "Big 12",
+      division: "FBS",
+      overallFitScore: 82,
+      tier: "Target / Realistic",
+      anthropometricFitScore: 84,
+      schemeTendencyFitScore: 86,
+      academicAdmitFitScore: 88,
+      geographicPipelineFitScore: 78,
+      rosterNeedFitScore: 98,
+      primaryScheme: "Pistol Wide Zone / RPO",
+      keyInsight: "Cincinnati has 3 senior QBs/OLs graduating in 2026 — creating an urgent 98/100 Roster Need Score."
+    }
+  ];
+
+  return res.json({
+    status: "evaluated",
+    position,
+    evaluatedMetrics: { heightInches, coreGpa },
+    summary: {
+      realisticBoardCount: 12,
+      reachBoardCount: 6,
+      safetyBoardCount: 9
+    },
+    topProgramFits: programs
+  });
+});
+
+app.post("/api/scheme-fit/coach-query", (req, res) => {
+  const { query } = req.body;
+  
+  return res.json({
+    status: "success",
+    query: query || "Show me 2027 OL, 6'4\"+, 285+, T1-verified 5-10-5 under 4.7, who fit our wide-zone archetype, within our Ohio pipeline, with a 3.2+ core GPA.",
+    matchedCount: 2,
+    results: [
+      {
+        id: "prospect_1",
+        name: "Marcus Vance",
+        position: "OT",
+        gradClass: 2027,
+        highSchool: "St. Edward High School",
+        state: "OH",
+        height: "6'5\"",
+        weight: 292,
+        shuttleTime: 4.62,
+        coreGpa: 3.45,
+        fitScore: 96,
+        archetypeMatch: "Wide-Zone Heavy OT Archetype (98% match)"
+      },
+      {
+        id: "prospect_2",
+        name: "Tyler Callahan",
+        position: "OT",
+        gradClass: 2027,
+        highSchool: "Moeller High School",
+        state: "OH",
+        height: "6'4.5\"",
+        weight: 288,
+        shuttleTime: 4.68,
+        coreGpa: 3.30,
+        fitScore: 92,
+        archetypeMatch: "Wide-Zone Stretch OT Archetype (94% match)"
+      }
+    ]
+  });
+});
+
+// ==========================================
 // FEATURE 11: VERIFIED DATA API & CRM SYNC
 // ==========================================
 

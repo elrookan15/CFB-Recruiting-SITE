@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users, RefreshCw, ListFilter, Code, ShieldCheck, Share2, Smartphone } from "lucide-react";
+import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users, RefreshCw, ListFilter, Code, ShieldCheck, Share2, Smartphone, Target } from "lucide-react";
 
 interface NavbarProps {
   activeTab: string;
@@ -110,6 +110,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Award className="w-4 h-4 text-emerald-400" />
               Top 250
+            </button>
+
+            <button
+              onClick={() => setActiveTab("scheme_fit")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "scheme_fit"
+                  ? "bg-gradient-to-r from-indigo-900/80 to-slate-800 text-indigo-300 border border-indigo-500/40 shadow-inner"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <Target className="w-4 h-4 text-indigo-400 animate-pulse" />
+              Scheme Fit Zillow
             </button>
 
             <button
@@ -299,6 +311,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             Top 250
+          </button>
+          <button
+            onClick={() => setActiveTab("scheme_fit")}
+            className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
+              activeTab === "scheme_fit" ? "bg-indigo-600 text-white font-bold" : "bg-slate-900 text-slate-300"
+            }`}
+          >
+            Scheme Fit Zillow
           </button>
           <button
             onClick={() => setActiveTab("highlights")}

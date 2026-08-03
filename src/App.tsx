@@ -17,12 +17,14 @@ import { CoachPipelineBoard } from "./components/CoachPipelineBoard";
 import { ComplianceDashboard } from "./components/ComplianceDashboard";
 import { CrmSyncModule } from "./components/CrmSyncModule";
 import { LiveCombineModule } from "./components/LiveCombineModule";
+import { SchemeFitEngine } from "./components/SchemeFitEngine";
 
 export function App() {
   const [profile, setProfile] = useState<AthleteProfile>(INITIAL_ATHLETE_PROFILE);
   const [activeTab, setActiveTab] = useState<
     | "profile"
     | "top250"
+    | "scheme_fit"
     | "highlights"
     | "coaches"
     | "transfer_portal"
@@ -74,6 +76,13 @@ export function App() {
               <TopWeeklyHighlights />
             </div>
           </div>
+        )}
+
+        {activeTab === "scheme_fit" && (
+          <SchemeFitEngine
+            athleteProfile={profile}
+            onOpenAiAssistant={() => setActiveTab("ai_assistant")}
+          />
         )}
 
         {activeTab === "highlights" && (

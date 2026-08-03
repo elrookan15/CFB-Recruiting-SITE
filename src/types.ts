@@ -338,4 +338,41 @@ export interface ParentSmsLog {
   timestamp: string;
 }
 
+// ==========================================
+// FEATURE 2: SCHEME FIT ENGINE TYPES
+// ==========================================
+export interface ProgramFitScore {
+  schoolId: string;
+  schoolName: string;
+  logoUrl?: string;
+  conference: string;
+  division: CollegeDivision;
+  overallFitScore: number; // 0-100
+  tier: "Target / Realistic" | "Reach" | "Safety";
+  
+  // Breakdown Sub-Scores (0-100)
+  anthropometricFitScore: number; // Height, weight, arm length vs 5-yr signee archetype
+  schemeTendencyFitScore: number; // Offense/Defense scheme fit (e.g. Wide-Zone, 4-2-5)
+  academicAdmitFitScore: number; // Core GPA & SAT vs program threshold
+  geographicPipelineFitScore: number; // State/pipeline recruiting history
+  rosterNeedFitScore: number; // Projected scholarship openings & senior age curve
+  
+  primaryScheme: string; // e.g. "Wide-Zone Stretch / Power Spread"
+  signeeArchetypeSummary: string; // e.g. "Avg OL Signee: 6'4.5\", 292 lbs, 33\" arms"
+  projectedOpenings: number; // e.g. 3 scholarship spots in Class of 2026
+  keyInsight: string; // e.g. "Your Fit at Coastal Carolina (81) is higher than at 14 FCS schools you're emailing."
+}
+
+export interface CoachSchemeFitQuery {
+  position: Position;
+  gradClass: number;
+  minHeightInches: number;
+  minWeightLbs: number;
+  maxShuttleTime?: number;
+  minCoreGpa: number;
+  targetSchemeArchetype: string;
+  geographicPipelineRegion: string;
+}
+
+
 
