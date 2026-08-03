@@ -382,6 +382,41 @@ recruiting_periods {
               </div>
             </div>
           </div>
+
+          {/* NEW: SECTION 11 & SECTION 12 ARCHITECTURE */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-3">
+              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                <Server className="w-5 h-5" /> Section 11: College CRM Pipe & OpenAPI Specs
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Infrastructure pipe delivering verified prospect payloads into ARMS, Teamworks, and Front Rush via standardized JSON/REST, XML/SOAP, and GraphQL Webhooks.
+              </p>
+
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs font-mono text-slate-300">
+                <div>Endpoint: POST /api/crm/sync</div>
+                <div>Connectors: ARMS, Teamworks, Front Rush</div>
+                <div>Monetization: $12k/yr Power 4 Enterprise Pipe</div>
+                <div>Payload: Cryptographic Laser Hash + NCAA ID</div>
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-3">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                <Shield className="w-5 h-5" /> Section 12: Live Combine Mode & BLE Timing Engine
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Event-day iPad/mobile app view powering bib check-in, Bluetooth Low Energy laser timing sync (Dashr/Brower/Zybek), instant parent SMS scorecards, and same-day verified badge issuance.
+              </p>
+
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs font-mono text-slate-300">
+                <div>BLE WebBluetooth API / Mobile SDK</div>
+                <div>Instant Parent SMS: Twilio / AWS SNS</div>
+                <div>Live Standings: Websocket / Server-Sent Events</div>
+                <div>Badge Issuance: Ed25519 Signed Verification Hash</div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

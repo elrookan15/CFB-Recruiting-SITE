@@ -265,3 +265,77 @@ export interface TimelineEvent {
   schoolLogo?: string;
 }
 
+// ==========================================
+// FEATURE 11: COLLEGE CRM SYNC TYPES
+// ==========================================
+export interface CrmConnector {
+  id: "arms" | "teamworks" | "front_rush" | "custom_webhook";
+  name: string;
+  logoUrl?: string;
+  status: "connected" | "disconnected" | "syncing" | "failed";
+  lastSyncTimestamp?: string;
+  totalRecordsSynced: number;
+  apiKeyConfigured: boolean;
+  webhookUrl: string;
+  pipePlan: "Power 4 Enterprise Pipe" | "D1 / Group of 5 Pipe" | "Camp Operator Pipeline";
+  endpointFormat: "JSON/REST" | "XML/SOAP" | "GraphQL";
+}
+
+export interface CrmSyncLog {
+  id: string;
+  targetCrm: "ARMS" | "Teamworks" | "Front Rush" | "Custom Webhook";
+  status: "SUCCESS" | "FAILED" | "PENDING";
+  crmRecordId: string;
+  auditHash: string;
+  timestamp: string;
+  responseMs: number;
+  athleteName: string;
+}
+
+// ==========================================
+// FEATURE 12: LIVE COMBINE MODE TYPES
+// ==========================================
+export interface CombineAthleteBib {
+  bibNumber: number;
+  athleteId: string;
+  athleteName: string;
+  position: Position;
+  gradClass: number;
+  highSchool: string;
+  checkInStatus: "Registered" | "Checked-In" | "Testing" | "Completed";
+  heightInches: number;
+  weightLbs: number;
+  handSizeInches: number;
+  armLengthInches: number;
+  parentPhone: string;
+  badgeIssued: boolean;
+  verifiedBadgeId?: string;
+  fortyTime?: number;
+  shuttleTime?: number;
+  verticalJump?: number;
+  broadJumpInches?: number;
+  benchReps?: number;
+}
+
+export interface BleStation {
+  id: string;
+  stationName: string;
+  metricType: "40-Yard Laser" | "5-10-5 Shuttle" | "Vertical Jump" | "Broad Jump";
+  deviceHardware: "Dashr BLE Laser v3" | "Brower Timing System" | "Zybek Laser Gate" | "SmartSpeed Wireless";
+  status: "CONNECTED" | "MEASURING" | "STANDBY" | "OFFLINE";
+  batteryLevel: number;
+  signalDbm: number;
+  lastReading?: { bibNumber: number; value: number; timestamp: string };
+}
+
+export interface ParentSmsLog {
+  id: string;
+  bibNumber: number;
+  athleteName: string;
+  parentPhone: string;
+  messageText: string;
+  status: "DELIVERED" | "QUEUED" | "FAILED";
+  timestamp: string;
+}
+
+

@@ -15,6 +15,8 @@ import { CoachesDirectory } from "./components/CoachesDirectory";
 import { TransferPortalModule } from "./components/TransferPortalModule";
 import { CoachPipelineBoard } from "./components/CoachPipelineBoard";
 import { ComplianceDashboard } from "./components/ComplianceDashboard";
+import { CrmSyncModule } from "./components/CrmSyncModule";
+import { LiveCombineModule } from "./components/LiveCombineModule";
 
 export function App() {
   const [profile, setProfile] = useState<AthleteProfile>(INITIAL_ATHLETE_PROFILE);
@@ -30,6 +32,8 @@ export function App() {
     | "ncaa"
     | "coach_views"
     | "compliance"
+    | "crm_sync"
+    | "combine_mode"
     | "tech_docs"
   >("profile");
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -103,6 +107,10 @@ export function App() {
         {activeTab === "coach_views" && <CoachMessagingFeed />}
 
         {activeTab === "compliance" && <ComplianceDashboard />}
+
+        {activeTab === "crm_sync" && <CrmSyncModule profile={profile} />}
+
+        {activeTab === "combine_mode" && <LiveCombineModule />}
 
         {activeTab === "tech_docs" && <TechDocsView />}
       </main>

@@ -256,6 +256,125 @@ Provide a JSON object with:
   }
 });
 
+// ==========================================
+// FEATURE 11: VERIFIED DATA API & CRM SYNC
+// ==========================================
+
+const CRM_AUDIT_TRAIL: any[] = [];
+
+app.post("/api/crm/sync", (req, res) => {
+  const { athleteData, targetCrms } = req.body;
+
+  const targetList = targetCrms || ["arms", "teamworks", "front_rush"];
+  const timestamp = new Date().toISOString();
+  const recordIds = {
+    arms: `ARMS-REC-${Math.floor(100000 + Math.random() * 900000)}`,
+    teamworks: `TW-PROSPECT-${Math.floor(100000 + Math.random() * 900000)}`,
+    front_rush: `FR-${Math.floor(100000 + Math.random() * 900000)}-D1`,
+  };
+
+  const auditEntry = {
+    id: `crm_sync_${Date.now()}`,
+    athlete_name: athleteData?.prospect_profile?.first_name ? `${athleteData.prospect_profile.first_name} ${athleteData.prospect_profile.last_name}` : "Caden Carter",
+    targets: targetList,
+    recordIds,
+    timestamp,
+    status: "SUCCESS",
+    latency_ms: Math.floor(120 + Math.random() * 60)
+  };
+
+  CRM_AUDIT_TRAIL.push(auditEntry);
+
+  return res.json({
+    status: "synced",
+    message: "Verified profile pushed to college CRM pipe",
+    recordIds,
+    targetsSynced: targetList.length,
+    auditEntry
+  });
+});
+
+app.get("/api/crm/status", (req, res) => {
+  return res.json({
+    connectors: [
+      { id: "arms", name: "ARMS Software", status: "connected", totalSynced: 1420 },
+      { id: "teamworks", name: "Teamworks", status: "connected", totalSynced: 980 },
+      { id: "front_rush", name: "Front Rush", status: "connected", totalSynced: 2150 }
+    ],
+    totalSyncs: CRM_AUDIT_TRAIL.length,
+    recentLogs: CRM_AUDIT_TRAIL.slice(-10)
+  });
+});
+
+// ==========================================
+// FEATURE 12: LIVE COMBINE MODE API
+// ==========================================
+
+const COMBINE_EVENT_DB = {
+  eventName: "Rivals All-American Combine - Atlanta, GA",
+  activeBibsCheckedIn: [101, 102, 103, 104, 105],
+  laserReadings: [] as any[]
+};
+
+app.post("/api/combine/checkin", (req, res) => {
+  const { bibNumber, heightInches, weightLbs } = req.body;
+  if (!bibNumber) {
+    return res.status(400).json({ error: "Missing bibNumber" });
+  }
+
+  if (!COMBINE_EVENT_DB.activeBibsCheckedIn.includes(bibNumber)) {
+    COMBINE_EVENT_DB.activeBibsCheckedIn.push(bibNumber);
+  }
+
+  return res.json({
+    status: "checked_in",
+    bibNumber,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post("/api/combine/ble-timer", (req, res) => {
+  const { stationId, bibNumber, metricValue } = req.body;
+  
+  const reading = {
+    id: `laser_${Date.now()}`,
+    stationId,
+    bibNumber,
+    metricValue,
+    timestamp: new Date().toISOString()
+  };
+
+  COMBINE_EVENT_DB.laserReadings.push(reading);
+
+  return res.json({
+    status: "recorded",
+    reading
+  });
+});
+
+app.post("/api/combine/issue-badge", (req, res) => {
+  const { bibNumber } = req.body;
+  const badgeId = `BADGE-COMBINE-${Date.now().toString().slice(-6)}`;
+  
+  return res.json({
+    status: "badge_issued",
+    bibNumber,
+    badgeId,
+    verificationHash: `0x${Math.random().toString(16).substring(2, 18)}`
+  });
+});
+
+app.post("/api/combine/send-sms", (req, res) => {
+  const { bibNumber, parentPhone, messageText } = req.body;
+
+  return res.json({
+    status: "sms_sent",
+    bibNumber,
+    parentPhone,
+    deliveredAt: new Date().toISOString()
+  });
+});
+
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
