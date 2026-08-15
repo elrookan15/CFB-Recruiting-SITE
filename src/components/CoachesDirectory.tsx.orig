@@ -50,23 +50,21 @@ export const CoachesDirectory: React.FC = () => {
     "ATH",
   ];
 
-  const filteredCoaches = useMemo(() => {
-    return coaches.filter((coach) => {
-      const matchesSearch =
-        coach.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        coach.school.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        coach.title.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredCoaches = coaches.filter((coach) => {
+    const matchesSearch =
+      coach.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      coach.school.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      coach.title.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesConf =
-        selectedConference === "All" || coach.conference === selectedConference;
+    const matchesConf =
+      selectedConference === "All" || coach.conference === selectedConference;
 
-      const matchesPos =
-        selectedPosition === "All" ||
-        coach.targetPositions.includes(selectedPosition as Position);
+    const matchesPos =
+      selectedPosition === "All" ||
+      coach.targetPositions.includes(selectedPosition as Position);
 
-      return matchesSearch && matchesConf && matchesPos;
-    });
-  }, [coaches, searchQuery, selectedConference, selectedPosition]);
+    return matchesSearch && matchesConf && matchesPos;
+  });
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();

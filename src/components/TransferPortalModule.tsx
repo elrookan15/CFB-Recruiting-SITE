@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { RefreshCw, Search, ShieldCheck, Filter, ExternalLink, Calendar, Award, CheckCircle2, AlertCircle } from "lucide-react";
 import { MOCK_TRANSFER_PORTAL_ATHLETES } from "../data/mockData";
 import { Position, CollegeDivision } from "../types";
@@ -8,17 +8,19 @@ export const TransferPortalModule: React.FC = () => {
   const [selectedPosition, setSelectedPosition] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
 
-  const filteredAthletes = MOCK_TRANSFER_PORTAL_ATHLETES.filter((athlete) => {
-    const matchesSearch =
-      athlete.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      athlete.formerSchool.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      athlete.conference.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredAthletes = useMemo(() => {
+    return MOCK_TRANSFER_PORTAL_ATHLETES.filter((athlete) => {
+      const matchesSearch =
+        athlete.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        athlete.formerSchool.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        athlete.conference.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesPosition = selectedPosition === "ALL" || athlete.position === selectedPosition;
-    const matchesStatus = selectedStatus === "ALL" || athlete.status === selectedStatus;
+      const matchesPosition = selectedPosition === "ALL" || athlete.position === selectedPosition;
+      const matchesStatus = selectedStatus === "ALL" || athlete.status === selectedStatus;
 
-    return matchesSearch && matchesPosition && matchesStatus;
-  });
+      return matchesSearch && matchesPosition && matchesStatus;
+    });
+  }, [searchTerm, selectedPosition, selectedStatus]);
 
   return (
     <div className="space-y-6">
