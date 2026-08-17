@@ -25,7 +25,7 @@ export const CampSearchEngine: React.FC = () => {
     );
   };
 
-  const filteredCamps = camps.filter((camp) => {
+  const filteredCamps = React.useMemo(() => camps.filter((camp) => {
     if (showBookmarksOnly && !camp.isBookmarked) return false;
     if (divisionFilter !== "ALL" && camp.division !== divisionFilter) return false;
     if (typeFilter !== "ALL" && camp.campType !== typeFilter) return false;
@@ -41,7 +41,7 @@ export const CampSearchEngine: React.FC = () => {
       );
     }
     return true;
-  });
+  }), [camps, showBookmarksOnly, divisionFilter, typeFilter, maxCost, zipCodeFilter, searchQuery]);
 
   // Export .ics calendar file
   const handleAddToCalendar = (camp: CampEntry) => {
