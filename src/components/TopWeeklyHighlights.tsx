@@ -63,12 +63,14 @@ export const TopWeeklyHighlights: React.FC = () => {
     "Special Teams Clutch",
   ];
 
-  const filteredHighlights = highlights
+  // ⚡ Bolt: Memoize expensive array filtering to prevent O(N) operations on re-renders
+  // Impact: Reduces wasted CPU cycles when non-filter state updates trigger re-renders.
+  const filteredHighlights = React.useMemo(() => highlights
     .filter((item) => {
       if (activeCategory === "All") return true;
       return item.category === activeCategory;
     })
-    .sort((a, b) => b.votes - a.votes);
+    .sort((a, b) => b.votes - a.votes), [highlights, activeCategory]);
 
   const handleHighlightSubmission = (e: React.FormEvent) => {
     e.preventDefault();

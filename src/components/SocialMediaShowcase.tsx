@@ -27,12 +27,14 @@ export const SocialMediaShowcase: React.FC<SocialMediaShowcaseProps> = ({
   >("All");
   const [activeTag, setActiveTag] = useState<string>("All");
 
-  const filteredPosts = MOCK_SOCIAL_POSTS.filter((post) => {
+  // ⚡ Bolt: Memoize expensive array filtering to prevent O(N) operations on re-renders
+  // Impact: Reduces wasted CPU cycles when non-filter state updates trigger re-renders.
+  const filteredPosts = React.useMemo(() => MOCK_SOCIAL_POSTS.filter((post) => {
     if (activePlatformFilter !== "All" && post.platform !== activePlatformFilter) {
       return false;
     }
     return true;
-  });
+  }), [activePlatformFilter]);
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">

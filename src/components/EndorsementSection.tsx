@@ -39,10 +39,12 @@ export const EndorsementSection: React.FC<EndorsementSectionProps> = ({
 
   const totalBonusScore = endorsements.reduce((acc, curr) => acc + curr.scoreBonus, 0);
 
-  const filteredEndorsements = endorsements.filter((item) => {
+  // ⚡ Bolt: Memoize expensive array filtering to prevent O(N) operations on re-renders
+  // Impact: Reduces wasted CPU cycles when non-filter state updates trigger re-renders.
+  const filteredEndorsements = React.useMemo(() => endorsements.filter((item) => {
     if (activeFilter === "All") return true;
     return item.badge === activeFilter;
-  });
+  }), [endorsements, activeFilter]);
 
   const handleAddEndorsement = (e: React.FormEvent) => {
     e.preventDefault();

@@ -19,7 +19,9 @@ export const LeaderboardTop250: React.FC = () => {
   const [showClassCalculator, setShowClassCalculator] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<string>("Georgia");
 
-  const filteredRecruits = MOCK_TOP_RECRUITS.filter((rec) => {
+  // ⚡ Bolt: Memoize expensive array filtering to prevent O(N) operations on re-renders
+  // Impact: Reduces wasted CPU cycles when non-filter state updates trigger re-renders.
+  const filteredRecruits = React.useMemo(() => MOCK_TOP_RECRUITS.filter((rec) => {
     if (rec.gradClass !== selectedClass) return false;
     if (selectedPos !== "ALL" && rec.position !== selectedPos) return false;
     if (selectedState !== "ALL" && rec.state !== selectedState) return false;
@@ -33,7 +35,7 @@ export const LeaderboardTop250: React.FC = () => {
       );
     }
     return true;
-  });
+  }), [selectedClass, selectedPos, selectedState, selectedStars, searchQuery]);
 
   // Calculate Team Class Rank mock points
   const teamCommits = MOCK_TOP_RECRUITS.filter((r) => r.committedTo?.toLowerCase().includes(selectedTeam.toLowerCase()));

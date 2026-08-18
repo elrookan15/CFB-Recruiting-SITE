@@ -8,7 +8,9 @@ export const TransferPortalModule: React.FC = () => {
   const [selectedPosition, setSelectedPosition] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
 
-  const filteredAthletes = MOCK_TRANSFER_PORTAL_ATHLETES.filter((athlete) => {
+  // ⚡ Bolt: Memoize expensive array filtering to prevent O(N) operations on re-renders
+  // Impact: Reduces wasted CPU cycles when non-filter state updates trigger re-renders.
+  const filteredAthletes = React.useMemo(() => MOCK_TRANSFER_PORTAL_ATHLETES.filter((athlete) => {
     const matchesSearch =
       athlete.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       athlete.formerSchool.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -18,7 +20,7 @@ export const TransferPortalModule: React.FC = () => {
     const matchesStatus = selectedStatus === "ALL" || athlete.status === selectedStatus;
 
     return matchesSearch && matchesPosition && matchesStatus;
-  });
+  }), [searchTerm, selectedPosition, selectedStatus]);
 
   return (
     <div className="space-y-6">

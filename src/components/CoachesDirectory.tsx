@@ -50,7 +50,9 @@ export const CoachesDirectory: React.FC = () => {
     "ATH",
   ];
 
-  const filteredCoaches = coaches.filter((coach) => {
+  // ⚡ Bolt: Memoize expensive array filtering to prevent O(N) operations on re-renders
+  // Impact: Reduces wasted CPU cycles when non-filter state updates trigger re-renders.
+  const filteredCoaches = React.useMemo(() => coaches.filter((coach) => {
     const matchesSearch =
       coach.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       coach.school.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -64,7 +66,7 @@ export const CoachesDirectory: React.FC = () => {
       coach.targetPositions.includes(selectedPosition as Position);
 
     return matchesSearch && matchesConf && matchesPos;
-  });
+  }), [coaches, searchQuery, selectedConference, selectedPosition]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
