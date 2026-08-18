@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { TopRecruit, Position, GradYear } from "../types";
 import { MOCK_TOP_RECRUITS } from "../data/mockData";
 import { Search, Filter, Flame, Clock, Trophy, ExternalLink, Play, Eye, ShieldCheck, CheckCircle2, ChevronRight, Calculator } from "lucide-react";
@@ -19,24 +19,29 @@ export const LeaderboardTop250: React.FC = () => {
   const [showClassCalculator, setShowClassCalculator] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<string>("Georgia");
 
-  const filteredRecruits = MOCK_TOP_RECRUITS.filter((rec) => {
-    if (rec.gradClass !== selectedClass) return false;
-    if (selectedPos !== "ALL" && rec.position !== selectedPos) return false;
-    if (selectedState !== "ALL" && rec.state !== selectedState) return false;
-    if (selectedStars > 0 && rec.starRating !== selectedStars) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        rec.fullName.toLowerCase().includes(q) ||
-        rec.highSchool.toLowerCase().includes(q) ||
-        rec.position.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+  const filteredRecruits = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return MOCK_TOP_RECRUITS.filter((rec) => {
+      if (rec.gradClass !== selectedClass) return false;
+      if (selectedPos !== "ALL" && rec.position !== selectedPos) return false;
+      if (selectedState !== "ALL" && rec.state !== selectedState) return false;
+      if (selectedStars > 0 && rec.starRating !== selectedStars) return false;
+      if (query) {
+        return (
+          rec.fullName.toLowerCase().includes(query) ||
+          rec.highSchool.toLowerCase().includes(query) ||
+          rec.position.toLowerCase().includes(query)
+        );
+      }
+      return true;
+    });
+  }, [selectedClass, selectedPos, selectedState, selectedStars, searchQuery]);
 
   // Calculate Team Class Rank mock points
-  const teamCommits = MOCK_TOP_RECRUITS.filter((r) => r.committedTo?.toLowerCase().includes(selectedTeam.toLowerCase()));
+  const teamCommits = useMemo(() => {
+    const team = selectedTeam.toLowerCase();
+    return MOCK_TOP_RECRUITS.filter((r) => r.committedTo?.toLowerCase().includes(team));
+  }, [selectedTeam]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 text-white space-y-8">
