@@ -1,0 +1,3 @@
+## 2024-05-18 - Memoizing derived state in array rendering
+**Learning:** `CoachPipelineBoard` maps over `stages` and inside the map callback it performs `prospects.filter((p) => p.stage === stage)`. This means it iterates through the entire `prospects` array for every stage, taking O(S * N) time on every render, where S is the number of stages (4) and N is the number of prospects. For large lists of prospects, this causes a performance hit on re-renders, e.g. when typing into the add prospect form!
+**Action:** Use `useMemo` to group `prospects` by `stage` in O(N) time upfront, resulting in an `Record<Stage, CoachPipelineProspect[]>` object. Then, in the `stages.map`, we can just do an O(1) property lookup!
