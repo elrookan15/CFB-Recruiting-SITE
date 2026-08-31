@@ -1,0 +1,6 @@
+⚡ Bolt: [performance improvement] Memoize coach list filtering
+
+💡 What: Wrapped the `coaches.filter` in `CoachesDirectory.tsx` with `useMemo`.
+🎯 Why: Prevents expensive O(N) array filtering of large mock datasets on every render, such as when a user types in the message modal.
+📊 Impact: Reduces unnecessary recalculations and improves rendering performance for state changes not related to filtering parameters.
+🔬 Measurement: Verify by typing in the message body in the modal inside `CoachesDirectory` - the `filteredCoaches` function shouldn't be executed on every keystroke.
