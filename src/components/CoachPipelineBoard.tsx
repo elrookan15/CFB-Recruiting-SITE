@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Users, Plus, MoveRight, Star, MessageSquare, CheckCircle, ChevronRight, Edit3, Trash2 } from "lucide-react";
 import { MOCK_COACH_PIPELINE_PROSPECTS } from "../data/mockData";
 import { CoachPipelineProspect } from "../types";
@@ -17,6 +17,24 @@ export const CoachPipelineBoard: React.FC = () => {
   });
 
   const stages: CoachPipelineProspect["stage"][] = ["Identified", "Contacted", "Offered", "Committed"];
+
+  // ⚡ Bolt Optimization: Group prospects by stage
+  // Impact: Replaces O(S * N) filtering inside the render loop with a single O(N) pass using useMemo.
+  // This prevents redundant array traversals for each column in the Kanban board.
+  const prospectsByStage = useMemo(() => {
+    const grouped: Record<string, CoachPipelineProspect[]> = {
+      Identified: [],
+      Contacted: [],
+      Offered: [],
+      Committed: [],
+    };
+    prospects.forEach((p) => {
+      if (grouped[p.stage]) {
+        grouped[p.stage].push(p);
+      }
+    });
+    return grouped;
+  }, [prospects]);
 
   const handleStageChange = (id: string, newStage: CoachPipelineProspect["stage"]) => {
     setProspects(
@@ -82,7 +100,7 @@ export const CoachPipelineBoard: React.FC = () => {
       {/* Kanban Columns */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
         {stages.map((stage) => {
-          const stageProspects = prospects.filter((p) => p.stage === stage);
+          const stageProspects = prospectsByStage[stage] || [];
           const stageColors = {
             Identified: "border-slate-800 bg-slate-950/40 text-slate-400",
             Contacted: "border-blue-500/30 bg-blue-950/20 text-blue-400",
