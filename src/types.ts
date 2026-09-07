@@ -281,16 +281,32 @@ export interface CrmConnector {
   endpointFormat: "JSON/REST" | "XML/SOAP" | "GraphQL";
 }
 
-export interface CrmSyncLog {
+export interface BaseCrmSyncLog {
   id: string;
   targetCrm: "ARMS" | "Teamworks" | "Front Rush" | "Custom Webhook";
-  status: "SUCCESS" | "FAILED" | "PENDING";
-  crmRecordId: string;
-  auditHash: string;
   timestamp: string;
-  responseMs: number;
   athleteName: string;
 }
+
+export interface SuccessfulCrmSyncLog extends BaseCrmSyncLog {
+  status: "SUCCESS";
+  crmRecordId: string;
+  auditHash: string;
+  responseMs: number;
+}
+
+export interface FailedCrmSyncLog extends BaseCrmSyncLog {
+  status: "FAILED";
+  errorMessage: string;
+  crmRecordId?: string;
+  responseMs?: number;
+}
+
+export interface PendingCrmSyncLog extends BaseCrmSyncLog {
+  status: "PENDING";
+}
+
+export type CrmSyncLog = SuccessfulCrmSyncLog | FailedCrmSyncLog | PendingCrmSyncLog;
 
 // ==========================================
 // FEATURE 12: LIVE COMBINE MODE TYPES

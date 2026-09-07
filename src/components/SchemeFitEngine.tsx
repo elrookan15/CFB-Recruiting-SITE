@@ -162,7 +162,7 @@ export const SchemeFitEngine: React.FC<SchemeFitEngineProps> = ({
     geographicPipelineRegion: "Ohio Pipeline",
   });
 
-  const [coachQueryResults, setCoachQueryResults] = useState([
+  const initialCoachProspects = [
     {
       id: "prospect_1",
       name: "Marcus Vance",
@@ -170,6 +170,8 @@ export const SchemeFitEngine: React.FC<SchemeFitEngineProps> = ({
       gradClass: 2027,
       highSchool: "St. Edward High School",
       state: "OH",
+      pipelineRegion: "Ohio Pipeline",
+      heightInches: 77,
       height: "6'5\"",
       weight: 292,
       shuttleTime: 4.62,
@@ -184,6 +186,8 @@ export const SchemeFitEngine: React.FC<SchemeFitEngineProps> = ({
       gradClass: 2027,
       highSchool: "Moeller High School",
       state: "OH",
+      pipelineRegion: "Ohio Pipeline",
+      heightInches: 76.5,
       height: "6'4.5\"",
       weight: 288,
       shuttleTime: 4.68,
@@ -191,21 +195,127 @@ export const SchemeFitEngine: React.FC<SchemeFitEngineProps> = ({
       fitScore: 92,
       archetypeMatch: "Wide-Zone Stretch OT Archetype (94% match)",
     },
-  ]);
+    {
+      id: "prospect_3",
+      name: "Devin Washington",
+      position: "DE",
+      gradClass: 2027,
+      highSchool: "Buford High School",
+      state: "GA",
+      pipelineRegion: "Georgia / Metro Atlanta",
+      heightInches: 76,
+      height: "6'4\"",
+      weight: 250,
+      shuttleTime: 4.35,
+      coreGpa: 3.50,
+      fitScore: 95,
+      archetypeMatch: "Speed Edge / 4-2-5 DE Archetype (96% match)",
+    },
+    {
+      id: "prospect_4",
+      name: "Jackson Miller",
+      position: "QB",
+      gradClass: 2027,
+      highSchool: "Westlake High School",
+      state: "TX",
+      pipelineRegion: "Texas DFW / Houston",
+      heightInches: 75,
+      height: "6'3\"",
+      weight: 210,
+      shuttleTime: 4.18,
+      coreGpa: 3.80,
+      fitScore: 94,
+      archetypeMatch: "Pro-Spread Passer Archetype (95% match)",
+    },
+    {
+      id: "prospect_5",
+      name: "Kalen Brooks",
+      position: "WR",
+      gradClass: 2027,
+      highSchool: "DeMatha Catholic",
+      state: "VA",
+      pipelineRegion: "DMV / Virginia",
+      heightInches: 74,
+      height: "6'2\"",
+      weight: 195,
+      shuttleTime: 4.12,
+      coreGpa: 3.35,
+      fitScore: 91,
+      archetypeMatch: "Vertical Threat / Slot Hybrid Archetype (92% match)",
+    },
+    {
+      id: "prospect_6",
+      name: "Brandon Reed",
+      position: "OG",
+      gradClass: 2027,
+      highSchool: "Gwinnett High School",
+      state: "GA",
+      pipelineRegion: "Georgia / Metro Atlanta",
+      heightInches: 76,
+      height: "6'4\"",
+      weight: 305,
+      shuttleTime: 4.75,
+      coreGpa: 3.25,
+      fitScore: 89,
+      archetypeMatch: "Power Gap Guard Archetype (90% match)",
+    },
+  ];
+
+  const coachQueryResults = initialCoachProspects.filter((p) => {
+    if (coachQuery.position && p.position !== coachQuery.position) return false;
+    if (coachQuery.minHeightInches && p.heightInches < coachQuery.minHeightInches) return false;
+    if (coachQuery.minWeightLbs && p.weight < coachQuery.minWeightLbs) return false;
+    if (coachQuery.geographicPipelineRegion && p.pipelineRegion !== coachQuery.geographicPipelineRegion) return false;
+    if (coachQuery.maxShuttleTime && p.shuttleTime > coachQuery.maxShuttleTime) return false;
+    if (coachQuery.minCoreGpa && p.coreGpa < coachQuery.minCoreGpa) return false;
+    return true;
+  });
 
   // Dynamic Fit Score recalculation simulation based on user inputs
   const calculateDynamicFit = (base: ProgramFitScore): ProgramFitScore => {
     const totalInches = heightFeet * 12 + heightInches;
-    let heightBonus = totalInches >= 75 ? 4 : 0; // 6'3"+
-    let gpaBonus = coreGpa >= 3.5 ? 5 : 0;
-    let armBonus = armLength >= 33.0 ? 3 : 0;
+    let heightBonus = totalInches >= 75 ? 4 : totalInches >= 73 ? 2 : 0; // 6'3"+ (+4), 6'1"+ (+2)
+    let gpaBonus = coreGpa >= 3.7 ? 5 : coreGpa >= 3.3 ? 3 : 0;
+    let armBonus = armLength >= 33.0 ? 3 : armLength >= 32.0 ? 1 : 0;
 
-    let adjustedScore = Math.min(99, Math.max(50, base.overallFitScore + heightBonus + gpaBonus + armBonus - 3));
+    // Real-Time Fit Factors: shuttleTime, weightLbs, selectedPosition
+    let shuttleBonus = shuttleTime <= 4.20 ? 4 : shuttleTime <= 4.35 ? 2 : shuttleTime > 4.50 ? -2 : 0;
 
-    let updatedTier: "Target / Realistic" | "Reach" | "Safety" = base.tier;
-    if (adjustedScore >= 85) updatedTier = "Target / Realistic";
-    else if (adjustedScore >= 78) updatedTier = "Target / Realistic";
-    else updatedTier = "Safety";
+    let weightBonus = 0;
+    if (selectedPosition === "OT" || selectedPosition === "OG") {
+      weightBonus = weightLbs >= 280 ? 4 : weightLbs >= 260 ? 2 : -2;
+    } else if (selectedPosition === "DE") {
+      weightBonus = weightLbs >= 240 ? 3 : weightLbs >= 220 ? 1 : 0;
+    } else if (selectedPosition === "QB") {
+      weightBonus = (weightLbs >= 200 && weightLbs <= 230) ? 3 : (weightLbs >= 185 && weightLbs <= 240) ? 1 : 0;
+    } else {
+      weightBonus = (weightLbs >= 185 && weightLbs <= 215) ? 3 : 1;
+    }
+
+    let positionBonus = 0;
+    const schemeLower = base.primaryScheme.toLowerCase();
+    if (selectedPosition === "QB" && (schemeLower.includes("spread") || schemeLower.includes("pro"))) {
+      positionBonus = 3;
+    } else if ((selectedPosition === "OT" || selectedPosition === "OG") && schemeLower.includes("zone")) {
+      positionBonus = 3;
+    } else if (selectedPosition === "DE" && (schemeLower.includes("4-2-5") || schemeLower.includes("multiple"))) {
+      positionBonus = 3;
+    } else if (selectedPosition === "WR" && schemeLower.includes("spread")) {
+      positionBonus = 3;
+    } else {
+      positionBonus = 1;
+    }
+
+    let adjustedScore = Math.min(99, Math.max(50, base.overallFitScore + heightBonus + gpaBonus + armBonus + shuttleBonus + weightBonus + positionBonus - 6));
+
+    let updatedTier: "Target / Realistic" | "Reach" | "Safety";
+    if (adjustedScore >= 85 || base.tier === "Reach") {
+      updatedTier = "Reach";
+    } else if (adjustedScore >= 75) {
+      updatedTier = "Target / Realistic";
+    } else {
+      updatedTier = "Safety";
+    }
 
     return {
       ...base,
@@ -220,9 +330,9 @@ export const SchemeFitEngine: React.FC<SchemeFitEngineProps> = ({
     .filter((p) => selectedConference === "ALL" || p.conference === selectedConference)
     .filter((p) => selectedTierFilter === "ALL" || p.tier.includes(selectedTierFilter));
 
-  const realisticCount = initialPrograms.filter((p) => p.overallFitScore >= 78 && p.overallFitScore < 89).length + 8;
-  const reachCount = initialPrograms.filter((p) => p.overallFitScore >= 89 || p.tier === "Reach").length + 4;
-  const safetyCount = initialPrograms.filter((p) => p.tier === "Safety").length + 7;
+  const realisticCount = activePrograms.filter((p) => p.tier === "Target / Realistic").length;
+  const reachCount = activePrograms.filter((p) => p.tier === "Reach").length;
+  const safetyCount = activePrograms.filter((p) => p.tier === "Safety").length;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 text-slate-100 space-y-8 animate-fadeIn">
@@ -556,7 +666,7 @@ export const SchemeFitEngine: React.FC<SchemeFitEngineProps> = ({
             <div className="p-4 rounded-xl bg-slate-950 border border-amber-500/30 text-amber-300 font-mono text-xs leading-relaxed space-y-2">
               <span className="text-[10px] uppercase tracking-wider text-slate-500 block font-bold">Natural Language Query Output</span>
               <p>
-                "Show me <strong className="text-white">2027 OL</strong>, <strong className="text-white">6'4"+</strong>, <strong className="text-white">285+ lbs</strong>, T1-verified 5-10-5 under <strong className="text-white">4.70s</strong>, who fit our <strong className="text-white">Wide-Zone archetype</strong>, within our <strong className="text-white">Ohio pipeline</strong>, with a <strong className="text-white">3.2+ Core GPA</strong>."
+                "Show me <strong className="text-white">{coachQuery.gradClass} {coachQuery.position}</strong>, <strong className="text-white">{Math.floor(coachQuery.minHeightInches / 12)}'{coachQuery.minHeightInches % 12}"+</strong>, <strong className="text-white">{coachQuery.minWeightLbs}+ lbs</strong>, T1-verified 5-10-5 under <strong className="text-white">{coachQuery.maxShuttleTime ? coachQuery.maxShuttleTime.toFixed(2) : "4.70"}s</strong>, who fit our <strong className="text-white">{coachQuery.targetSchemeArchetype}</strong>, within our <strong className="text-white">{coachQuery.geographicPipelineRegion}</strong>, with a <strong className="text-white">{coachQuery.minCoreGpa}+ Core GPA</strong>."
               </p>
             </div>
 
@@ -566,7 +676,24 @@ export const SchemeFitEngine: React.FC<SchemeFitEngineProps> = ({
                 <label className="text-slate-400 block font-bold mb-1">Target Position</label>
                 <select
                   value={coachQuery.position}
-                  onChange={(e) => setCoachQuery({ ...coachQuery, position: e.target.value as any })}
+                  onChange={(e) => {
+                    const pos = e.target.value as any;
+                    let defaultWeight = 285;
+                    let defaultHeight = 76;
+                    if (pos === "QB" || pos === "WR") {
+                      defaultWeight = 185;
+                      defaultHeight = 74;
+                    } else if (pos === "DE") {
+                      defaultWeight = 230;
+                      defaultHeight = 75;
+                    }
+                    setCoachQuery({
+                      ...coachQuery,
+                      position: pos,
+                      minWeightLbs: defaultWeight,
+                      minHeightInches: defaultHeight,
+                    });
+                  }}
                   className="w-full p-2.5 bg-slate-950 rounded-xl border border-slate-800 font-bold text-white"
                 >
                   <option value="OT">OT (Offensive Tackle)</option>
@@ -584,6 +711,8 @@ export const SchemeFitEngine: React.FC<SchemeFitEngineProps> = ({
                   onChange={(e) => setCoachQuery({ ...coachQuery, minHeightInches: +e.target.value })}
                   className="w-full p-2.5 bg-slate-950 rounded-xl border border-slate-800 font-bold text-white"
                 >
+                  <option value={72}>6'0" (72")</option>
+                  <option value={74}>6'2" (74")</option>
                   <option value={76}>6'4" (76")</option>
                   <option value={77}>6'5" (77")</option>
                   <option value={78}>6'6" (78")</option>
@@ -640,18 +769,26 @@ export const SchemeFitEngine: React.FC<SchemeFitEngineProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/80">
-                  {coachQueryResults.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-950/40">
-                      <td className="p-3 font-extrabold text-white">{p.name}</td>
-                      <td className="p-3 text-slate-300">{p.position} ('27)</td>
-                      <td className="p-3 text-slate-300">{p.highSchool} ({p.state})</td>
-                      <td className="p-3 font-mono text-white">{p.height}, {p.weight} lbs</td>
-                      <td className="p-3 font-mono text-emerald-400">{p.shuttleTime}s (T1 Laser)</td>
-                      <td className="p-3 font-mono text-slate-200">{p.coreGpa}</td>
-                      <td className="p-3 text-indigo-300 font-medium">{p.archetypeMatch}</td>
-                      <td className="p-3 text-right font-black text-amber-400 text-sm">{p.fitScore}/100</td>
+                  {coachQueryResults.length > 0 ? (
+                    coachQueryResults.map((p) => (
+                      <tr key={p.id} className="hover:bg-slate-950/40">
+                        <td className="p-3 font-extrabold text-white">{p.name}</td>
+                        <td className="p-3 text-slate-300">{p.position} ('{p.gradClass.toString().slice(2)})</td>
+                        <td className="p-3 text-slate-300">{p.highSchool} ({p.state})</td>
+                        <td className="p-3 font-mono text-white">{p.height}, {p.weight} lbs</td>
+                        <td className="p-3 font-mono text-emerald-400">{p.shuttleTime}s (T1 Laser)</td>
+                        <td className="p-3 font-mono text-slate-200">{p.coreGpa}</td>
+                        <td className="p-3 text-indigo-300 font-medium">{p.archetypeMatch}</td>
+                        <td className="p-3 text-right font-black text-amber-400 text-sm">{p.fitScore}/100</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="p-6 text-center text-slate-400 italic">
+                        No prospects match the current filter criteria. Adjust your query parameters above.
+                      </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>

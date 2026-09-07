@@ -427,9 +427,9 @@ recruiting_periods {
 
               <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs font-mono text-slate-300">
                 <div>BLE WebBluetooth API / Mobile SDK</div>
-                <div>Instant Parent SMS: Twilio / AWS SNS</div>
+                <div>Instant Parent SMS: Twilio / AWS SNS (Simulated / Roadmap)</div>
                 <div>Live Standings: Websocket / Server-Sent Events</div>
-                <div>Badge Issuance: Ed25519 Signed Verification Hash</div>
+                <div>Badge Issuance: Ed25519 Signed Verification Hash (Simulated / Roadmap)</div>
               </div>
             </div>
           </div>

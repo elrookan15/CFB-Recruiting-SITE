@@ -6,6 +6,13 @@ interface CrmSyncModuleProps {
   profile?: AthleteProfile;
 }
 
+const TARGET_CRM_NAME_MAP: Record<CrmConnector["id"], CrmSyncLog["targetCrm"]> = {
+  arms: "ARMS",
+  teamworks: "Teamworks",
+  front_rush: "Front Rush",
+  custom_webhook: "Custom Webhook",
+};
+
 export const CrmSyncModule: React.FC<CrmSyncModuleProps> = ({ profile }) => {
   const [connectors, setConnectors] = useState<CrmConnector[]>([
     {
@@ -133,9 +140,29 @@ export const CrmSyncModule: React.FC<CrmSyncModuleProps> = ({ profile }) => {
     },
   };
 
-  const handlePushToCrms = async () => {
+  const handlePushToCrms = async (targetConnectorId?: string) => {
+    if (isPushing) return;
     setIsPushing(true);
     setPushResult(null);
+
+    const targetConnectors =
+      targetConnectorId && typeof targetConnectorId === "string"
+        ? connectors.filter((c) => c.id === targetConnectorId && c.status === "connected")
+        : connectors.filter((c) => c.status === "connected");
+
+    if (targetConnectors.length === 0) {
+      const targetConn = targetConnectorId && typeof targetConnectorId === "string"
+        ? connectors.find((c) => c.id === targetConnectorId)
+        : null;
+      setPushResult({
+        success: false,
+        message: targetConn
+          ? `Connector "${targetConn.name}" is not connected.`
+          : "No connected CRM connectors available for sync.",
+      });
+      setIsPushing(false);
+      return;
+    }
 
     try {
       // Execute live call to backend API endpoint
@@ -144,56 +171,44 @@ export const CrmSyncModule: React.FC<CrmSyncModuleProps> = ({ profile }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           athleteData: sampleAthletePayload,
-          targetCrms: connectors.filter((c) => c.status === "connected").map((c) => c.id),
+          targetCrms: targetConnectors.map((c) => c.id),
         }),
       });
 
       if (!response.ok) {
-        throw new Error("API call failed");
+        throw new Error(`API call failed with status ${response.status}`);
       }
 
       const data = await response.json();
+      const timestamp = new Date().toISOString().replace("T", " ").substring(0, 19);
+      const athleteName = profile?.fullName || "Caden Carter";
 
-      // Add new log entries
-      const newLogs: CrmSyncLog[] = [
-        {
-          id: `sync_${Date.now()}_1`,
-          targetCrm: "ARMS",
+      // Add new log entries for target connectors only
+      const newLogs: CrmSyncLog[] = targetConnectors.map((conn, index) => {
+        const targetCrmName = TARGET_CRM_NAME_MAP[conn.id] || "Custom Webhook";
+        const recordId =
+          data.recordIds?.[conn.id] ||
+          `${targetCrmName.toUpperCase().replace(/\s+/g, "")}-REC-${Math.floor(10000 + Math.random() * 90000)}`;
+
+        return {
+          id: `sync_${Date.now()}_${index}`,
+          targetCrm: targetCrmName,
           status: "SUCCESS",
-          crmRecordId: data.recordIds?.arms || `ARMS-REC-${Math.floor(10000 + Math.random() * 90000)}`,
+          crmRecordId: recordId,
           auditHash: `0x${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}`,
-          timestamp: new Date().toISOString().replace("T", " ").substring(0, 19),
-          responseMs: Math.floor(110 + Math.random() * 50),
-          athleteName: profile?.fullName || "Caden Carter",
-        },
-        {
-          id: `sync_${Date.now()}_2`,
-          targetCrm: "Teamworks",
-          status: "SUCCESS",
-          crmRecordId: data.recordIds?.teamworks || `TW-PROSPECT-${Math.floor(10000 + Math.random() * 90000)}`,
-          auditHash: `0x${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}`,
-          timestamp: new Date().toISOString().replace("T", " ").substring(0, 19),
-          responseMs: Math.floor(130 + Math.random() * 60),
-          athleteName: profile?.fullName || "Caden Carter",
-        },
-        {
-          id: `sync_${Date.now()}_3`,
-          targetCrm: "Front Rush",
-          status: "SUCCESS",
-          crmRecordId: data.recordIds?.front_rush || `FR-${Math.floor(10000 + Math.random() * 90000)}-D1`,
-          auditHash: `0x${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}`,
-          timestamp: new Date().toISOString().replace("T", " ").substring(0, 19),
-          responseMs: Math.floor(160 + Math.random() * 70),
-          athleteName: profile?.fullName || "Caden Carter",
-        },
-      ];
+          timestamp,
+          responseMs: Math.floor(110 + Math.random() * 60),
+          athleteName,
+        };
+      });
 
       setLogs((prev) => [...newLogs, ...prev]);
 
-      // Update last sync timestamps
+      // Update last sync timestamps for targeted connectors only
+      const syncedIds = new Set(targetConnectors.map((c) => c.id));
       setConnectors((prev) =>
         prev.map((conn) =>
-          conn.status === "connected"
+          syncedIds.has(conn.id)
             ? {
                 ...conn,
                 lastSyncTimestamp: "Just now",
@@ -203,30 +218,30 @@ export const CrmSyncModule: React.FC<CrmSyncModuleProps> = ({ profile }) => {
         )
       );
 
+      const syncedNamesStr = targetConnectors.map((c) => TARGET_CRM_NAME_MAP[c.id]).join(", ");
       setPushResult({
         success: true,
-        message: `Successfully pushed verified profile for ${profile?.fullName || "Caden Carter"} to 3 CRMs (ARMS, Teamworks, Front Rush) in 164ms.`,
+        message: `Successfully pushed verified profile for ${athleteName} to ${targetConnectors.length} CRM(s) (${syncedNamesStr}).`,
       });
     } catch (err) {
-      // Graceful fallback for mock execution
-      setTimeout(() => {
-        const timestamp = new Date().toISOString().replace("T", " ").substring(0, 19);
-        const fallbackLog: CrmSyncLog = {
-          id: `sync_${Date.now()}`,
-          targetCrm: "ARMS",
-          status: "SUCCESS",
-          crmRecordId: `ARMS-REC-${Math.floor(10000 + Math.random() * 90000)}`,
-          auditHash: "0x8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d",
-          timestamp,
-          responseMs: 145,
-          athleteName: profile?.fullName || "Caden Carter",
-        };
-        setLogs((prev) => [fallbackLog, ...prev]);
-        setPushResult({
-          success: true,
-          message: `Verified profile pushed to active CRM connectors (ARMS, Teamworks, Front Rush).`,
-        });
-      }, 600);
+      const errorMessage = err instanceof Error ? err.message : "CRM sync request failed";
+      const timestamp = new Date().toISOString().replace("T", " ").substring(0, 19);
+      const athleteName = profile?.fullName || "Caden Carter";
+
+      const failedLogs: CrmSyncLog[] = targetConnectors.map((conn, index) => ({
+        id: `sync_${Date.now()}_fail_${index}`,
+        targetCrm: TARGET_CRM_NAME_MAP[conn.id] || "Custom Webhook",
+        status: "FAILED",
+        errorMessage,
+        timestamp,
+        athleteName,
+      }));
+
+      setLogs((prev) => [...failedLogs, ...prev]);
+      setPushResult({
+        success: false,
+        message: `Failed to push verified profile to CRM connector(s): ${errorMessage}`,
+      });
     } finally {
       setIsPushing(false);
     }
@@ -268,7 +283,7 @@ export const CrmSyncModule: React.FC<CrmSyncModuleProps> = ({ profile }) => {
 
           <div className="shrink-0 space-y-2 text-right">
             <button
-              onClick={handlePushToCrms}
+              onClick={() => handlePushToCrms()}
               disabled={isPushing}
               className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-extrabold text-sm shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2.5 w-full lg:w-auto"
             >
@@ -276,7 +291,7 @@ export const CrmSyncModule: React.FC<CrmSyncModuleProps> = ({ profile }) => {
               <span>{isPushing ? "Syncing Pipe..." : "One-Click Push to All CRMs"}</span>
             </button>
             <p className="text-[10px] text-slate-400 font-mono">
-              3 Connected CRMs • Target: {profile?.fullName || "Caden Carter"}
+              {connectors.filter((c) => c.status === "connected").length} Connected CRMs • Target: {profile?.fullName || "Caden Carter"}
             </p>
           </div>
         </div>
@@ -416,7 +431,7 @@ export const CrmSyncModule: React.FC<CrmSyncModuleProps> = ({ profile }) => {
                   <Lock className="w-3.5 h-3.5 text-emerald-400" /> OAuth2 / API Key Authenticated
                 </span>
                 <button
-                  onClick={handlePushToCrms}
+                  onClick={() => handlePushToCrms(connector.id)}
                   disabled={isPushing || connector.status !== "connected"}
                   className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold transition-all disabled:opacity-50"
                 >
@@ -551,14 +566,40 @@ export const CrmSyncModule: React.FC<CrmSyncModuleProps> = ({ profile }) => {
                     <td className="p-3 font-bold text-white">{log.targetCrm}</td>
                     <td className="p-3 text-slate-300 font-sans">{log.athleteName}</td>
                     <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold text-[10px]">
+                      <span
+                        className={`px-2 py-0.5 rounded font-bold text-[10px] ${
+                          log.status === "SUCCESS"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : log.status === "FAILED"
+                            ? "bg-rose-500/20 text-rose-400"
+                            : "bg-amber-500/20 text-amber-400"
+                        }`}
+                      >
                         {log.status}
                       </span>
                     </td>
-                    <td className="p-3 text-amber-400 font-semibold">{log.crmRecordId}</td>
-                    <td className="p-3 text-slate-400 truncate max-w-[140px]">{log.auditHash}</td>
+                    <td className="p-3 text-amber-400 font-semibold">
+                      {log.status === "SUCCESS"
+                        ? log.crmRecordId
+                        : log.status === "FAILED"
+                        ? log.crmRecordId || "N/A"
+                        : "Pending..."}
+                    </td>
+                    <td className="p-3 text-slate-400 truncate max-w-[140px]">
+                      {log.status === "SUCCESS"
+                        ? log.auditHash
+                        : log.status === "FAILED"
+                        ? log.errorMessage
+                        : "N/A"}
+                    </td>
                     <td className="p-3 text-slate-400">{log.timestamp}</td>
-                    <td className="p-3 text-right text-emerald-400">{log.responseMs}ms</td>
+                    <td className="p-3 text-right text-emerald-400">
+                      {log.status === "SUCCESS"
+                        ? `${log.responseMs}ms`
+                        : log.status === "FAILED" && log.responseMs !== undefined
+                        ? `${log.responseMs}ms`
+                        : "—"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

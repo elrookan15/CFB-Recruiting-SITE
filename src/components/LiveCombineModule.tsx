@@ -196,24 +196,33 @@ export const LiveCombineModule: React.FC = () => {
 
   const handleTriggerBleLaser = async (stationId: string) => {
     setIsSimulatingBle(true);
-    const randomTime = stationId === "ble_40" ? +(4.35 + Math.random() * 0.35).toFixed(2) : +(4.05 + Math.random() * 0.3).toFixed(2);
+    let generatedValue: number;
+    if (stationId === "ble_40") {
+      generatedValue = +(4.35 + Math.random() * 0.35).toFixed(2);
+    } else if (stationId === "ble_shuttle") {
+      generatedValue = +(4.05 + Math.random() * 0.3).toFixed(2);
+    } else if (stationId === "ble_vertical") {
+      generatedValue = +(28 + Math.random() * 12).toFixed(1);
+    } else {
+      generatedValue = Math.floor(100 + Math.random() * 30);
+    }
     const targetBib = selectedBib || 101;
 
     try {
-      await fetch("/api/combine/ble-timer", {
+      const res = await fetch("/api/combine/ble-timer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           stationId,
           bibNumber: targetBib,
-          metricValue: randomTime,
+          metricValue: generatedValue,
         }),
       });
-    } catch (e) {
-      // Fallback
-    }
 
-    setTimeout(() => {
+      if (!res.ok) {
+        throw new Error(`Server returned status ${res.status}`);
+      }
+
       const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
       // Update station reading
@@ -223,29 +232,34 @@ export const LiveCombineModule: React.FC = () => {
             ? {
                 ...s,
                 status: "CONNECTED",
-                lastReading: { bibNumber: targetBib, value: randomTime, timestamp: nowTime },
+                lastReading: { bibNumber: targetBib, value: generatedValue, timestamp: nowTime },
               }
             : s
         )
       );
 
-      // Update athlete time
+      // Update athlete metrics
       setAthletes((prev) =>
         prev.map((a) => {
           if (a.bibNumber === targetBib) {
             return {
               ...a,
               checkInStatus: "Completed",
-              fortyTime: stationId === "ble_40" ? randomTime : a.fortyTime,
-              shuttleTime: stationId === "ble_shuttle" ? randomTime : a.shuttleTime,
+              fortyTime: stationId === "ble_40" ? generatedValue : a.fortyTime,
+              shuttleTime: stationId === "ble_shuttle" ? generatedValue : a.shuttleTime,
+              verticalJump: stationId === "ble_vertical" ? generatedValue : a.verticalJump,
+              broadJumpInches: stationId === "ble_broad" ? generatedValue : a.broadJumpInches,
             };
           }
           return a;
         })
       );
-
+    } catch (e: any) {
+      console.error("BLE timer sync failed:", e);
+      alert(`BLE laser sync failed: ${e.message || "Network error"}`);
+    } finally {
       setIsSimulatingBle(false);
-    }, 500);
+    }
   };
 
   const handleIssueVerifiedBadge = (bibNumber: number) => {
@@ -270,7 +284,7 @@ export const LiveCombineModule: React.FC = () => {
         bibNumber: target.bibNumber,
         athleteName: target.athleteName,
         parentPhone: target.parentPhone,
-        messageText: `GRIDIRON COMBINE: Official Verified Badge Issued (#${newBadgeId}) for ${target.athleteName}! 40-Yard: ${target.fortyTime || 4.52}s. Direct pushed to ARMS & Teamworks CRM pipe.`,
+        messageText: `GRIDIRON COMBINE: Official Verified Badge Issued (#${newBadgeId}) for ${target.athleteName}! 40-Yard: ${target.fortyTime || "--"}s. Direct pushed to ARMS & Teamworks CRM pipe.`,
         status: "DELIVERED",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
       };

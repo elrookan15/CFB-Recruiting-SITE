@@ -3,6 +3,8 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import crypto from "crypto";
+import { CoachSchemeFitQuery, ProgramFitScore } from "./src/types";
 import {
   evaluateComplianceGate,
   MESSAGE_SEND_ATTEMPTS_DB,
@@ -266,9 +268,15 @@ app.post("/api/scheme-fit/evaluate", (req, res) => {
   const coreGpa = athleteData?.coreGpa || 3.75;
   const position = athleteData?.primaryPosition || "QB";
 
+  // Calculate score adjustments based on evaluated metrics
+  const heightBonus = heightInches >= 75 ? 4 : (heightInches < 70 ? -4 : 0);
+  const gpaBonus = coreGpa >= 3.5 ? 5 : (coreGpa < 3.0 ? -5 : 0);
+  const scoreAdjustment = heightBonus + gpaBonus;
+
   // ML Fit Score Calculations
-  const programs = [
+  const rawPrograms: ProgramFitScore[] = [
     {
+      schoolId: "coastal_carolina",
       schoolName: "Coastal Carolina Chanticleers",
       conference: "Sun Belt",
       division: "FBS",
@@ -280,9 +288,12 @@ app.post("/api/scheme-fit/evaluate", (req, res) => {
       geographicPipelineFitScore: 84,
       rosterNeedFitScore: 91,
       primaryScheme: "Spread Option / Multi-Set Zone",
+      signeeArchetypeSummary: "Avg Signee: 6'2.5\", 210 lbs, 4.62s 40",
+      projectedOpenings: 3,
       keyInsight: "Your Fit at Coastal Carolina (88) is higher than at 14 of the FCS schools you're currently emailing."
     },
     {
+      schoolId: "georgia_tech",
       schoolName: "Georgia Tech Yellow Jackets",
       conference: "ACC",
       division: "FBS",
@@ -294,9 +305,12 @@ app.post("/api/scheme-fit/evaluate", (req, res) => {
       geographicPipelineFitScore: 96,
       rosterNeedFitScore: 82,
       primaryScheme: "Pro-Spread Wide Zone",
+      signeeArchetypeSummary: "Avg Signee: 6'3\", 215 lbs, 3.65 Core GPA",
+      projectedOpenings: 2,
       keyInsight: "In-state pipeline bonus (+15): Georgia Tech has signed 14 players within 40 miles of Buford in 5 years."
     },
     {
+      schoolId: "cincinnati",
       schoolName: "Cincinnati Bearcats",
       conference: "Big 12",
       division: "FBS",
@@ -308,9 +322,25 @@ app.post("/api/scheme-fit/evaluate", (req, res) => {
       geographicPipelineFitScore: 78,
       rosterNeedFitScore: 98,
       primaryScheme: "Pistol Wide Zone / RPO",
+      signeeArchetypeSummary: "Avg Signee: 6'3.5\", 220 lbs, 4.21 Shuttle",
+      projectedOpenings: 4,
       keyInsight: "Cincinnati has 3 senior QBs/OLs graduating in 2026 — creating an urgent 98/100 Roster Need Score."
     }
   ];
+
+  const programs = rawPrograms.map((p) => {
+    const adjustedOverallFitScore = Math.min(99, Math.max(50, p.overallFitScore + scoreAdjustment));
+    let tier: "Target / Realistic" | "Reach" | "Safety" = p.tier;
+    if (adjustedOverallFitScore >= 85) tier = "Target / Realistic";
+    else if (adjustedOverallFitScore >= 78) tier = "Target / Realistic";
+    else tier = "Safety";
+
+    return {
+      ...p,
+      overallFitScore: adjustedOverallFitScore,
+      tier
+    };
+  });
 
   return res.json({
     status: "evaluated",
@@ -325,43 +355,116 @@ app.post("/api/scheme-fit/evaluate", (req, res) => {
   });
 });
 
+const PROSPECT_POOL = [
+  {
+    id: "prospect_1",
+    name: "Marcus Vance",
+    position: "OT" as const,
+    gradClass: 2027,
+    highSchool: "St. Edward High School",
+    state: "OH",
+    height: "6'5\"",
+    heightInches: 77,
+    weight: 292,
+    shuttleTime: 4.62,
+    coreGpa: 3.45,
+    fitScore: 96,
+    archetypeMatch: "Wide-Zone Heavy OT Archetype (98% match)"
+  },
+  {
+    id: "prospect_2",
+    name: "Tyler Callahan",
+    position: "OT" as const,
+    gradClass: 2027,
+    highSchool: "Moeller High School",
+    state: "OH",
+    height: "6'4.5\"",
+    heightInches: 76.5,
+    weight: 288,
+    shuttleTime: 4.68,
+    coreGpa: 3.30,
+    fitScore: 92,
+    archetypeMatch: "Wide-Zone Stretch OT Archetype (94% match)"
+  },
+  {
+    id: "prospect_3",
+    name: "Caden Carter",
+    position: "QB" as const,
+    gradClass: 2026,
+    highSchool: "Buford High School",
+    state: "GA",
+    height: "6'3\"",
+    heightInches: 75,
+    weight: 210,
+    shuttleTime: 4.18,
+    coreGpa: 3.75,
+    fitScore: 88,
+    archetypeMatch: "Spread Option QB Archetype (90% match)"
+  },
+  {
+    id: "prospect_4",
+    name: "Dakorien Moore",
+    position: "WR" as const,
+    gradClass: 2025,
+    highSchool: "Duncanville HS",
+    state: "TX",
+    height: "5'11\"",
+    heightInches: 71,
+    weight: 185,
+    shuttleTime: 4.02,
+    coreGpa: 3.50,
+    fitScore: 95,
+    archetypeMatch: "Vertical Threat WR Archetype (96% match)"
+  }
+];
+
 app.post("/api/scheme-fit/coach-query", (req, res) => {
-  const { query } = req.body;
-  
+  const defaultQuery: CoachSchemeFitQuery = {
+    position: "OT",
+    gradClass: 2027,
+    minHeightInches: 76,
+    minWeightLbs: 285,
+    maxShuttleTime: 4.70,
+    minCoreGpa: 3.2,
+    targetSchemeArchetype: "Wide-Zone Stretch / Power Spread",
+    geographicPipelineRegion: "Ohio Pipeline"
+  };
+
+  const rawQuery = req.body.query && typeof req.body.query === "object" ? req.body.query : req.body;
+  const query: CoachSchemeFitQuery = {
+    position: rawQuery.position || defaultQuery.position,
+    gradClass: rawQuery.gradClass ? Number(rawQuery.gradClass) : defaultQuery.gradClass,
+    minHeightInches: rawQuery.minHeightInches !== undefined ? Number(rawQuery.minHeightInches) : defaultQuery.minHeightInches,
+    minWeightLbs: rawQuery.minWeightLbs !== undefined ? Number(rawQuery.minWeightLbs) : defaultQuery.minWeightLbs,
+    maxShuttleTime: rawQuery.maxShuttleTime !== undefined ? Number(rawQuery.maxShuttleTime) : defaultQuery.maxShuttleTime,
+    minCoreGpa: rawQuery.minCoreGpa !== undefined ? Number(rawQuery.minCoreGpa) : defaultQuery.minCoreGpa,
+    targetSchemeArchetype: rawQuery.targetSchemeArchetype || defaultQuery.targetSchemeArchetype,
+    geographicPipelineRegion: rawQuery.geographicPipelineRegion || defaultQuery.geographicPipelineRegion
+  };
+
+  const matched = PROSPECT_POOL.filter((p) => {
+    if (query.position && p.position !== query.position) return false;
+    if (query.gradClass && p.gradClass !== query.gradClass) return false;
+    if (query.minHeightInches !== undefined && p.heightInches < query.minHeightInches) return false;
+    if (query.minWeightLbs !== undefined && p.weight < query.minWeightLbs) return false;
+    if (query.maxShuttleTime !== undefined && p.shuttleTime > query.maxShuttleTime) return false;
+    if (query.minCoreGpa !== undefined && p.coreGpa < query.minCoreGpa) return false;
+    if (query.geographicPipelineRegion) {
+      const reg = query.geographicPipelineRegion.toLowerCase();
+      if (reg.includes("ohio") && p.state !== "OH") return false;
+      if (reg.includes("georgia") && p.state !== "GA") return false;
+      if (reg.includes("texas") && p.state !== "TX") return false;
+    }
+    return true;
+  });
+
+  const results = matched.map(({ heightInches, ...rest }) => rest);
+
   return res.json({
     status: "success",
-    query: query || "Show me 2027 OL, 6'4\"+, 285+, T1-verified 5-10-5 under 4.7, who fit our wide-zone archetype, within our Ohio pipeline, with a 3.2+ core GPA.",
-    matchedCount: 2,
-    results: [
-      {
-        id: "prospect_1",
-        name: "Marcus Vance",
-        position: "OT",
-        gradClass: 2027,
-        highSchool: "St. Edward High School",
-        state: "OH",
-        height: "6'5\"",
-        weight: 292,
-        shuttleTime: 4.62,
-        coreGpa: 3.45,
-        fitScore: 96,
-        archetypeMatch: "Wide-Zone Heavy OT Archetype (98% match)"
-      },
-      {
-        id: "prospect_2",
-        name: "Tyler Callahan",
-        position: "OT",
-        gradClass: 2027,
-        highSchool: "Moeller High School",
-        state: "OH",
-        height: "6'4.5\"",
-        weight: 288,
-        shuttleTime: 4.68,
-        coreGpa: 3.30,
-        fitScore: 92,
-        archetypeMatch: "Wide-Zone Stretch OT Archetype (94% match)"
-      }
-    ]
+    query,
+    matchedCount: results.length,
+    results
   });
 });
 
@@ -380,6 +483,7 @@ app.post("/api/crm/sync", (req, res) => {
     arms: `ARMS-REC-${Math.floor(100000 + Math.random() * 900000)}`,
     teamworks: `TW-PROSPECT-${Math.floor(100000 + Math.random() * 900000)}`,
     front_rush: `FR-${Math.floor(100000 + Math.random() * 900000)}-D1`,
+    custom_webhook: `CW-OPENAPI-${Math.floor(100000 + Math.random() * 900000)}`,
   };
 
   const auditEntry = {
@@ -419,9 +523,17 @@ app.get("/api/crm/status", (req, res) => {
 // FEATURE 12: LIVE COMBINE MODE API
 // ==========================================
 
+interface CombineCheckInRecord {
+  bibNumber: number;
+  heightInches?: number;
+  weightLbs?: number;
+  timestamp: string;
+}
+
 const COMBINE_EVENT_DB = {
   eventName: "Rivals All-American Combine - Atlanta, GA",
   activeBibsCheckedIn: [101, 102, 103, 104, 105],
+  checkIns: [] as CombineCheckInRecord[],
   laserReadings: [] as any[]
 };
 
@@ -431,14 +543,35 @@ app.post("/api/combine/checkin", (req, res) => {
     return res.status(400).json({ error: "Missing bibNumber" });
   }
 
-  if (!COMBINE_EVENT_DB.activeBibsCheckedIn.includes(bibNumber)) {
-    COMBINE_EVENT_DB.activeBibsCheckedIn.push(bibNumber);
+  const numBib = Number(bibNumber);
+
+  if (!COMBINE_EVENT_DB.activeBibsCheckedIn.includes(numBib)) {
+    COMBINE_EVENT_DB.activeBibsCheckedIn.push(numBib);
+  }
+
+  const checkInRecord: CombineCheckInRecord = {
+    bibNumber: numBib,
+    heightInches: heightInches !== undefined ? Number(heightInches) : undefined,
+    weightLbs: weightLbs !== undefined ? Number(weightLbs) : undefined,
+    timestamp: new Date().toISOString()
+  };
+
+  const existingIdx = COMBINE_EVENT_DB.checkIns.findIndex((c) => c.bibNumber === numBib);
+  if (existingIdx >= 0) {
+    COMBINE_EVENT_DB.checkIns[existingIdx] = {
+      ...COMBINE_EVENT_DB.checkIns[existingIdx],
+      ...checkInRecord
+    };
+  } else {
+    COMBINE_EVENT_DB.checkIns.push(checkInRecord);
   }
 
   return res.json({
     status: "checked_in",
-    bibNumber,
-    timestamp: new Date().toISOString()
+    bibNumber: numBib,
+    heightInches: checkInRecord.heightInches,
+    weightLbs: checkInRecord.weightLbs,
+    timestamp: checkInRecord.timestamp
   });
 });
 
@@ -469,7 +602,7 @@ app.post("/api/combine/issue-badge", (req, res) => {
     status: "badge_issued",
     bibNumber,
     badgeId,
-    verificationHash: `0x${Math.random().toString(16).substring(2, 18)}`
+    verificationHash: `0x${crypto.randomBytes(8).toString("hex")}`
   });
 });
 
