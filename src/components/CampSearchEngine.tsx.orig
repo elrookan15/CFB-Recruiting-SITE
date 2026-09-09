@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { CampEntry, CollegeDivision } from "../types";
 import { MOCK_CAMPS } from "../data/mockData";
 import { Search, Calendar, MapPin, DollarSign, Bookmark, ExternalLink, Star, Plus, Check, Filter, Share2, Sparkles } from "lucide-react";
@@ -25,9 +25,7 @@ export const CampSearchEngine: React.FC = () => {
     );
   };
 
-  // ⚡ Bolt Optimization: Memoized filtered camps list
-  // Impact: Prevents O(N) recalculations on every render, preserving object stability for child components.
-  const filteredCamps = useMemo(() => camps.filter((camp) => {
+  const filteredCamps = camps.filter((camp) => {
     if (showBookmarksOnly && !camp.isBookmarked) return false;
     if (divisionFilter !== "ALL" && camp.division !== divisionFilter) return false;
     if (typeFilter !== "ALL" && camp.campType !== typeFilter) return false;
@@ -43,15 +41,7 @@ export const CampSearchEngine: React.FC = () => {
       );
     }
     return true;
-  }), [
-    camps,
-    showBookmarksOnly,
-    divisionFilter,
-    typeFilter,
-    maxCost,
-    zipCodeFilter,
-    searchQuery
-  ]);
+  });
 
   // Export .ics calendar file
   const handleAddToCalendar = (camp: CampEntry) => {
