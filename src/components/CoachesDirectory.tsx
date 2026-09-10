@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { CollegeCoachProfile, Position, CollegeDivision } from "../types";
 import { MOCK_COLLEGE_COACHES } from "../data/mockData";
 import {
@@ -50,21 +50,26 @@ export const CoachesDirectory: React.FC = () => {
     "ATH",
   ];
 
-  const filteredCoaches = coaches.filter((coach) => {
-    const matchesSearch =
-      coach.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      coach.school.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      coach.title.toLowerCase().includes(searchQuery.toLowerCase());
+  // ⚡ Bolt Optimization: Memoized coach filtering
+  // Impact: Prevents O(N) array filtering recalculations on every keystroke in the direct messaging modal.
+  const filteredCoaches = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return coaches.filter((coach) => {
+      const matchesSearch =
+        coach.fullName.toLowerCase().includes(query) ||
+        coach.school.toLowerCase().includes(query) ||
+        coach.title.toLowerCase().includes(query);
 
-    const matchesConf =
-      selectedConference === "All" || coach.conference === selectedConference;
+      const matchesConf =
+        selectedConference === "All" || coach.conference === selectedConference;
 
-    const matchesPos =
-      selectedPosition === "All" ||
-      coach.targetPositions.includes(selectedPosition as Position);
+      const matchesPos =
+        selectedPosition === "All" ||
+        coach.targetPositions.includes(selectedPosition as Position);
 
-    return matchesSearch && matchesConf && matchesPos;
-  });
+      return matchesSearch && matchesConf && matchesPos;
+    });
+  }, [coaches, searchQuery, selectedConference, selectedPosition]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
