@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { CampEntry, CollegeDivision } from "../types";
 import { MOCK_CAMPS } from "../data/mockData";
 import { Search, Calendar, MapPin, DollarSign, Bookmark, ExternalLink, Star, Plus, Check, Filter, Share2, Sparkles } from "lucide-react";
@@ -25,23 +25,27 @@ export const CampSearchEngine: React.FC = () => {
     );
   };
 
-  const filteredCamps = camps.filter((camp) => {
-    if (showBookmarksOnly && !camp.isBookmarked) return false;
-    if (divisionFilter !== "ALL" && camp.division !== divisionFilter) return false;
-    if (typeFilter !== "ALL" && camp.campType !== typeFilter) return false;
-    if (camp.cost > maxCost) return false;
-    if (zipCodeFilter.trim() && !camp.zipCode.startsWith(zipCodeFilter.trim())) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        camp.name.toLowerCase().includes(q) ||
-        camp.host.toLowerCase().includes(q) ||
-        camp.city.toLowerCase().includes(q) ||
-        camp.state.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+  // ⚡ Bolt Optimization: Memoized filtered camps array
+  // Impact: Prevents O(N) recalculations of camp filters on every render, especially when interacting with the review modal.
+  const filteredCamps = useMemo(() => {
+    return camps.filter((camp) => {
+      if (showBookmarksOnly && !camp.isBookmarked) return false;
+      if (divisionFilter !== "ALL" && camp.division !== divisionFilter) return false;
+      if (typeFilter !== "ALL" && camp.campType !== typeFilter) return false;
+      if (camp.cost > maxCost) return false;
+      if (zipCodeFilter.trim() && !camp.zipCode.startsWith(zipCodeFilter.trim())) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          camp.name.toLowerCase().includes(q) ||
+          camp.host.toLowerCase().includes(q) ||
+          camp.city.toLowerCase().includes(q) ||
+          camp.state.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [camps, showBookmarksOnly, divisionFilter, typeFilter, maxCost, zipCodeFilter, searchQuery]);
 
   // Export .ics calendar file
   const handleAddToCalendar = (camp: CampEntry) => {
