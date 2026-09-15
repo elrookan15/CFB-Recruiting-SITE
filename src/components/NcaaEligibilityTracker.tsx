@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { NcaaCourse } from "../types";
 import { INITIAL_NCAA_COURSES } from "../data/mockData";
 import { GraduationCap, CheckCircle2, AlertTriangle, BookOpen, Plus, Trash2, Award, Info } from "lucide-react";
@@ -35,18 +35,22 @@ export const NcaaEligibilityTracker: React.FC = () => {
 
   const coreGpa = Number(calculateCoreGpa());
 
-  const completedCount = courses.filter((c) => c.grade !== "In Progress" && c.grade !== "F").length;
+  // ⚡ Bolt Optimization: Memoized completed count calculation
+  // Impact: Prevents recalculation of O(N) array filtering on unrelated state changes (like score updates), improving render times.
+  const completedCount = useMemo(() => courses.filter((c) => c.grade !== "In Progress" && c.grade !== "F").length, [courses]);
   const progressPercent = Math.min(100, Math.round((completedCount / 16) * 100));
 
   // Category counts
-  const categoryRequirements = [
+  // ⚡ Bolt Optimization: Memoized category requirements calculation
+  // Impact: Prevents 6 * O(N) array filterings on unrelated state changes.
+  const categoryRequirements = useMemo(() => [
     { name: "English", required: 4, count: courses.filter((c) => c.category === "English" && c.grade !== "F").length },
     { name: "Math", required: 3, count: courses.filter((c) => c.category === "Math" && c.grade !== "F").length },
     { name: "Natural Science", required: 2, count: courses.filter((c) => c.category === "Natural Science" && c.grade !== "F").length },
     { name: "Social Science", required: 2, count: courses.filter((c) => c.category === "Social Science" && c.grade !== "F").length },
     { name: "Extra English/Math/Sci", required: 1, count: courses.filter((c) => c.category === "Extra English/Math/Sci" && c.grade !== "F").length },
     { name: "Additional Core", required: 4, count: courses.filter((c) => c.category === "Additional Core" && c.grade !== "F").length },
-  ];
+  ], [courses]);
 
   const handleAddCourse = (e: React.FormEvent) => {
     e.preventDefault();
