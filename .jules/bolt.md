@@ -1,3 +1,6 @@
 ## 2024-05-24 - React Component Filtering Optimization
 **Learning:** Found an O(N) recalculation during every render on inputs in `CoachesDirectory.tsx`. Even though N is currently small for mock data, the codebase pattern encourages `useMemo` for any filtered list that depends on multiple filter states (like search, conference, and position dropdowns).
 **Action:** Always wrap derived filtering data logic in `useMemo` with proper dependencies when discovering raw `.filter()` calls inside the render path.
+## 2026-09-27 - Array Iteration Logic Nuance during Memoization Optimization
+**Learning:** When condensing multiple `.filter()` operations into a single loop, be careful not to couple conditions that should be separate. In `NcaaEligibilityTracker`, combining the `completedCount` check and the `counts` map check under a single `if (grade !== 'In Progress' && grade !== 'F')` broke functionality because the category counts were expected to include 'In Progress' courses (only excluding 'F' grades).
+**Action:** Always verify the original boolean conditions of each `.filter()` step separately before combining them into a single-pass loop optimization. Preserve independent checks using multiple `if` blocks.

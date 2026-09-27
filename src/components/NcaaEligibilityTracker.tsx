@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { NcaaCourse } from "../types";
 import { INITIAL_NCAA_COURSES } from "../data/mockData";
 import { GraduationCap, CheckCircle2, AlertTriangle, BookOpen, Plus, Trash2, Award, Info } from "lucide-react";
@@ -35,18 +35,48 @@ export const NcaaEligibilityTracker: React.FC = () => {
 
   const coreGpa = Number(calculateCoreGpa());
 
-  const completedCount = courses.filter((c) => c.grade !== "In Progress" && c.grade !== "F").length;
-  const progressPercent = Math.min(100, Math.round((completedCount / 16) * 100));
+  // ⚡ Bolt Optimization: Single-pass iteration for course category counts
+  // Impact: Replaces O(7N) array filtering on every render with an O(N) memoized pass.
+  // Reduces main thread blocking when form inputs (like SAT/ACT scores) are updated.
+  const { completedCount, categoryRequirements } = useMemo(() => {
+    let completed = 0;
+    const counts = {
+      "English": 0,
+      "Math": 0,
+      "Natural Science": 0,
+      "Social Science": 0,
+      "Extra English/Math/Sci": 0,
+      "Additional Core": 0,
+    };
 
-  // Category counts
-  const categoryRequirements = [
-    { name: "English", required: 4, count: courses.filter((c) => c.category === "English" && c.grade !== "F").length },
-    { name: "Math", required: 3, count: courses.filter((c) => c.category === "Math" && c.grade !== "F").length },
-    { name: "Natural Science", required: 2, count: courses.filter((c) => c.category === "Natural Science" && c.grade !== "F").length },
-    { name: "Social Science", required: 2, count: courses.filter((c) => c.category === "Social Science" && c.grade !== "F").length },
-    { name: "Extra English/Math/Sci", required: 1, count: courses.filter((c) => c.category === "Extra English/Math/Sci" && c.grade !== "F").length },
-    { name: "Additional Core", required: 4, count: courses.filter((c) => c.category === "Additional Core" && c.grade !== "F").length },
-  ];
+    for (let i = 0; i < courses.length; i++) {
+      const c = courses[i];
+
+      if (c.grade !== "In Progress" && c.grade !== "F") {
+        completed++;
+      }
+
+      if (c.grade !== "F") {
+        if (c.category in counts) {
+          counts[c.category as keyof typeof counts]++;
+        }
+      }
+    }
+
+    return {
+      completedCount: completed,
+      categoryRequirements: [
+        { name: "English", required: 4, count: counts["English"] },
+        { name: "Math", required: 3, count: counts["Math"] },
+        { name: "Natural Science", required: 2, count: counts["Natural Science"] },
+        { name: "Social Science", required: 2, count: counts["Social Science"] },
+        { name: "Extra English/Math/Sci", required: 1, count: counts["Extra English/Math/Sci"] },
+        { name: "Additional Core", required: 4, count: counts["Additional Core"] },
+      ]
+    };
+  }, [courses]);
+
+  const progressPercent = Math.min(100, Math.round((completedCount / 16) * 100));
 
   const handleAddCourse = (e: React.FormEvent) => {
     e.preventDefault();
