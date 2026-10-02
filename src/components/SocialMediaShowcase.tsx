@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { MOCK_SOCIAL_POSTS } from "../data/mockData";
 import {
   Heart,
@@ -27,12 +27,16 @@ export const SocialMediaShowcase: React.FC<SocialMediaShowcaseProps> = ({
   >("All");
   const [activeTag, setActiveTag] = useState<string>("All");
 
-  const filteredPosts = MOCK_SOCIAL_POSTS.filter((post) => {
-    if (activePlatformFilter !== "All" && post.platform !== activePlatformFilter) {
-      return false;
-    }
-    return true;
-  });
+  // ⚡ Bolt Optimization: Memoized social post filtering
+  // Impact: Prevents O(N) array filtering when other state changes (like modal visibility).
+  const filteredPosts = useMemo(() => {
+    return MOCK_SOCIAL_POSTS.filter((post) => {
+      if (activePlatformFilter !== "All" && post.platform !== activePlatformFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [activePlatformFilter]);
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">
