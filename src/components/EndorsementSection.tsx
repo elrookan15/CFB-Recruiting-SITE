@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { CoachEndorsement, CollegeDivision } from "../types";
 import { INITIAL_COACH_ENDORSEMENTS } from "../data/mockData";
 import {
@@ -39,10 +39,14 @@ export const EndorsementSection: React.FC<EndorsementSectionProps> = ({
 
   const totalBonusScore = endorsements.reduce((acc, curr) => acc + curr.scoreBonus, 0);
 
-  const filteredEndorsements = endorsements.filter((item) => {
-    if (activeFilter === "All") return true;
-    return item.badge === activeFilter;
-  });
+  // ⚡ Bolt Optimization: Memoized endorsement filtering
+  // Impact: Prevents O(N) recalculations on every render (e.g. while typing in the new endorsement form).
+  const filteredEndorsements = useMemo(() => {
+    return endorsements.filter((item) => {
+      if (activeFilter === "All") return true;
+      return item.badge === activeFilter;
+    });
+  }, [endorsements, activeFilter]);
 
   const handleAddEndorsement = (e: React.FormEvent) => {
     e.preventDefault();
