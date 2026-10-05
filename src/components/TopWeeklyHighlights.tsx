@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { WeeklyHighlight, Position } from "../types";
 import { INITIAL_TOP_HIGHLIGHTS } from "../data/mockData";
 import {
@@ -63,12 +63,16 @@ export const TopWeeklyHighlights: React.FC = () => {
     "Special Teams Clutch",
   ];
 
-  const filteredHighlights = highlights
-    .filter((item) => {
-      if (activeCategory === "All") return true;
-      return item.category === activeCategory;
-    })
-    .sort((a, b) => b.votes - a.votes);
+  // ⚡ Bolt Optimization: Memoized filtered and sorted highlights list
+  // Impact: Prevents O(N log N) recalculations on every render, especially when modifying inputs in the submission form
+  const filteredHighlights = useMemo(() => {
+    return highlights
+      .filter((item) => {
+        if (activeCategory === "All") return true;
+        return item.category === activeCategory;
+      })
+      .sort((a, b) => b.votes - a.votes);
+  }, [highlights, activeCategory]);
 
   const handleHighlightSubmission = (e: React.FormEvent) => {
     e.preventDefault();
