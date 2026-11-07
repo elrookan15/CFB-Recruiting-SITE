@@ -18,6 +18,23 @@ export const CoachPipelineBoard: React.FC = () => {
 
   const stages: CoachPipelineProspect["stage"][] = ["Identified", "Contacted", "Offered", "Committed"];
 
+  // ⚡ Bolt Optimization: Group prospects by stage
+  // Impact: Prevents O(4N) recalculations on every keystroke in the Add Target Prospect modal
+  const prospectsByStage = useMemo(() => {
+    const grouped: Record<string, CoachPipelineProspect[]> = {
+      Identified: [],
+      Contacted: [],
+      Offered: [],
+      Committed: []
+    };
+    prospects.forEach((p) => {
+      if (grouped[p.stage]) {
+        grouped[p.stage].push(p);
+      }
+    });
+    return grouped;
+  }, [prospects]);
+
   const handleStageChange = (id: string, newStage: CoachPipelineProspect["stage"]) => {
     setProspects(
       prospects.map((p) => (p.id === id ? { ...p, stage: newStage, lastActivity: "Just now — Stage Updated" } : p))
