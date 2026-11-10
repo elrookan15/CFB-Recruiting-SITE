@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { X, Trophy, Zap, Shield, GraduationCap, ArrowRight, CheckCircle2 } from "lucide-react";
 import { TopRecruit } from "../types";
 import { MOCK_TOP_RECRUITS } from "../data/mockData";
@@ -33,9 +33,13 @@ export const RecruitComparisonModal: React.FC<RecruitComparisonModalProps> = ({
     }
   };
 
-  const availableRecruits = MOCK_TOP_RECRUITS.filter(
-    (r) => !selectedRecruits.some((sr) => sr.id === r.id)
-  );
+  // ⚡ Bolt Optimization: Memoized available recruits filtering
+  // Impact: Prevents O(N*M) filtering when unrelated state changes occur.
+  const availableRecruits = useMemo(() => {
+    return MOCK_TOP_RECRUITS.filter(
+      (r) => !selectedRecruits.some((sr) => sr.id === r.id)
+    );
+  }, [selectedRecruits]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
