@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { CoachEndorsement, CollegeDivision } from "../types";
 import { INITIAL_COACH_ENDORSEMENTS } from "../data/mockData";
 import {
@@ -37,12 +37,20 @@ export const EndorsementSection: React.FC<EndorsementSectionProps> = ({
   const [testimonialText, setTestimonialText] = useState("");
   const [formSuccess, setFormSuccess] = useState(false);
 
-  const totalBonusScore = endorsements.reduce((acc, curr) => acc + curr.scoreBonus, 0);
+  // ⚡ Bolt Optimization: Memoize total bonus score calculation
+  // Impact: Prevents O(N) recalculation on every render
+  const totalBonusScore = useMemo(() => {
+    return endorsements.reduce((acc, curr) => acc + curr.scoreBonus, 0);
+  }, [endorsements]);
 
-  const filteredEndorsements = endorsements.filter((item) => {
-    if (activeFilter === "All") return true;
-    return item.badge === activeFilter;
-  });
+  // ⚡ Bolt Optimization: Memoize filtered endorsements array
+  // Impact: Prevents O(N) recalculation and preserves array reference to prevent unnecessary child re-renders
+  const filteredEndorsements = useMemo(() => {
+    return endorsements.filter((item) => {
+      if (activeFilter === "All") return true;
+      return item.badge === activeFilter;
+    });
+  }, [endorsements, activeFilter]);
 
   const handleAddEndorsement = (e: React.FormEvent) => {
     e.preventDefault();
